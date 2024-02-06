@@ -1,30 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
 
-import { Workflow } from "../contract/workflow.interface";
-import { FunctionDto } from "./function.dto";
 import { AnnotationDto } from "./annotation.dto";
 import { ResourceDto } from "./resource.dto";
+import { CreateWorkflowFunctionDto } from "./create-workflow-function.dto";
 
-export class WorkflowDto implements Workflow {
-
-    @ApiProperty({
-        description: 'The workflow name',
-        type: [FunctionDto],
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    name: string;
-
+export class UpdateWorkflowDto {
+    
     @ApiProperty({
         description: 'The workflow functions',
-        type: [FunctionDto],
+        type: [CreateWorkflowFunctionDto],
         required: true
     })
     @IsDefined()
     @IsNotEmpty()
-    functions: FunctionDto[];
+    functions: CreateWorkflowFunctionDto[];
 
     @ApiProperty({
         description: 'The workflow resources',
@@ -37,7 +27,7 @@ export class WorkflowDto implements Workflow {
 
     @ApiProperty({
         description: 'The workflow annotations',
-        type: [AnnotationDto],
+        type:[AnnotationDto],
         required: true
     })
     @IsDefined()

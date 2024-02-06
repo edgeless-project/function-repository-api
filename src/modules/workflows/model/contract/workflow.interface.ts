@@ -3,7 +3,7 @@ import { Resource } from "./resource.interface";
 import { Annotation } from "./annotation.interface";
 
 export interface Workflow {
-    id?: string;
+    name: string;
     functions: Function[];
     resources: Resource[];
     annotations: Annotation;

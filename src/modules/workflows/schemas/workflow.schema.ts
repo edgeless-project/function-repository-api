@@ -29,6 +29,9 @@ class WorkflowFunction {
 @Schema() 
 export class Workflow {
   @Prop()
+  name: string;
+
+  @Prop()
   owner: string;
   
   @Prop()
@@ -48,3 +51,5 @@ export class Workflow {
 }
 
 export const WorkflowSchema = SchemaFactory.createForClass(Workflow);
+
+WorkflowSchema.index({ name: 1, owner: 1 }, { unique: true });

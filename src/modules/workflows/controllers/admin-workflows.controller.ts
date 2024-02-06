@@ -7,6 +7,7 @@ import { WorkflowsService } from '../services/workflows.service';
 import { WorkflowDto } from '../model/dto/workflow.dto';
 import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
 import { ResponseDeleteWorkflowDto } from '../model/dto/response-delete-workflow.dto';
+import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
 
 @ApiTags('Admin')
 @Controller('admin/workflow')
@@ -26,35 +27,35 @@ export class AdminWorkflowsController {
     return this.workflowsService.createWorkflow(eventData, "admin");
   }
 
-  @Put(':id')
+  @Put(':name')
   @ApiOperation({
     summary: '',
-    description: 'This service updates a workflow by its id.'
+    description: 'This service updates a workflow by its name.'
   })
   @ApiOkResponse({ type: WorkflowDto})
-  async updateWorkflow(@Body() eventData: CreateWorkflowDto, @Param('id') id: string) {
-    return this.workflowsService.updateWorkflow(id, eventData, "admin");
+  async updateWorkflow(@Body() eventData: UpdateWorkflowDto, @Param('name') name: string) {
+    return this.workflowsService.updateWorkflow(name, eventData, "admin");
   }
 
-  @Delete(':id')
+  @Delete(':name')
   @ApiOperation({
     summary: '',
-    description: 'This service deletes an existing workflow by its id.'
+    description: 'This service deletes an existing workflow by its name.'
   })
   @ApiOkResponse({ type: ResponseDeleteWorkflowDto})
-  async deleteFunction(@Param('id') id: string) {
-    return this.workflowsService.deleteWorkflow(id, 'admin');
+  async deleteFunction(@Param('name') name: string) {
+    return this.workflowsService.deleteWorkflow(name, 'admin');
   }
 
-  @Get(':id')
+  @Get(':name')
   @ApiOperation({
     summary: '',
-    description: 'This service gets a new workflow by its id.'
+    description: 'This service gets a new workflow by its name.'
   })
   @ApiOkResponse({ type: WorkflowDto})
   @ApiConsumes('application/json', 'application/x-www-form-urlencoded')
-  async getWorkflow(@Param('id') id: string) {
-    return this.workflowsService.getWorkflow(id, "admin");
+  async getWorkflow(@Param('name') name: string) {
+    return this.workflowsService.getWorkflow(name, "admin");
   }
 
 }

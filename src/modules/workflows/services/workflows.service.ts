@@ -242,7 +242,7 @@ export class WorkflowsService {
         .skip(offset)
         .exec();
 
-      const items = result.map(w => ({id: w.id}));
+      const items = result.map(w => ({name: w.name}));
 
       return {
         items,

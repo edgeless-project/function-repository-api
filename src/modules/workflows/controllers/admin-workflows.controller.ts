@@ -8,6 +8,8 @@ import { WorkflowDto } from '../model/dto/workflow.dto';
 import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
 import { ResponseDeleteWorkflowDto } from '../model/dto/response-delete-workflow.dto';
 import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
+import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
+import { ResponseWorkflowListDto } from '../model/dto/response-workflow-list.dto';
 
 @ApiTags('Admin')
 @Controller('admin/workflow')
@@ -56,6 +58,29 @@ export class AdminWorkflowsController {
   @ApiConsumes('application/json', 'application/x-www-form-urlencoded')
   async getWorkflow(@Param('name') name: string) {
     return this.workflowsService.getWorkflow(name, "admin");
+  }
+
+  @Get('')
+  @ApiOperation({
+    summary: '',
+    description: 'This service gets the list of available workflows with pagination (by using limit and offset query params), by default limit=10, offset=0. The service also returns the total number of workflows (total attribute).'
+  })
+  @ApiOkResponse({ type: ResponseWorkflowListDto})
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+  })
+  async findWorkflows(
+    @Query('offset', new OptionalParseIntPipe('0')) offset: number,
+    @Query('limit', new OptionalParseIntPipe('10')) limit: number
+  ) {
+    return this.workflowsService.findWorkflows(offset, limit);
   }
 
 }

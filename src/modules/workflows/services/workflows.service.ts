@@ -234,4 +234,26 @@ export class WorkflowsService {
     }
   }
 
+  async findWorkflows(offset: number, limit: number) {
+    try {
+      const total = await this.workflowModel.countDocuments().exec();
+      const result = await this.workflowModel.find({}, { ['name']: 1, _id: 0 })
+        .limit(limit)
+        .skip(offset)
+        .exec();
+
+      const items = result.map(w => ({id: w.id}));
+
+      return {
+        items,
+        total,
+        limit,
+        offset
+      };
+    } catch (err) {
+      this.logger.error('findWorkflow: ', err);
+      throw new InternalServerErrorException(err);
+    }
+  }
+
 }

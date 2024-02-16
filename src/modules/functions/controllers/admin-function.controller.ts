@@ -10,6 +10,8 @@ import { ResponseUploadFunctionCodeDto } from '../model/dto/function/response-up
 import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete-function.dto';
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
+import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
+import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
 
 @ApiTags('Admin')
 @Controller('admin/function')
@@ -135,5 +137,28 @@ export class AdminFunctionController {
     @Param('id') id: string
   ) {
     return this.functionService.getFunctionVersions(id, 'admin');
+  }
+
+  @Get('')
+  @ApiOperation({
+    summary: '',
+    description: 'This service gets the list of available functions with pagination (by using limit and offset query params), by default limit=10, offset=0. The service also returns the total number of functions (total attribute).'
+  })
+  @ApiOkResponse({ type: ResponseFunctionListDto})
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+  })
+  async findFunctions(
+    @Query('offset', new OptionalParseIntPipe('0')) offset: number,
+    @Query('limit', new OptionalParseIntPipe('10')) limit: number
+  ) {
+    return this.functionService.findFunctions(offset, limit);
   }
 }

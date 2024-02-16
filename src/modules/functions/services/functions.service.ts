@@ -352,4 +352,48 @@ export class FunctionService {
     const versions = functionsData.map(item => item.version);
     return { versions };
   }
+
+  async findFunctions(offset: number, limit: number) {
+    try {
+
+      // Count the total number of functions
+      const totalCount = await this.functionModel.aggregate([
+        {
+          $group: {
+            _id: "$id"
+          }
+        },
+        {
+          $count: "total"
+        }
+      ]);
+
+      const total = totalCount.length > 0 ? totalCount[0].total : 0;
+
+      // Get the functions (only the latest version of each function)
+      const result = await this.functionModel.aggregate([
+        { $sort: { version: -1 } },
+        { $group: { _id: "$id", lastObject: { $first: "$$ROOT" } } },
+        { $replaceRoot: { newRoot: "$lastObject" } },
+        { $skip: offset },
+        { $limit: limit }
+      ]).exec();
+
+      const items = result.map(w => ({
+        id: w.id,
+        function_type: w.function_type,
+        version: w.version
+      }));
+
+      return {
+        items,
+        total,
+        limit,
+        offset
+      };
+    } catch (err) {
+      this.logger.error('findFunctions: ', err);
+      throw new InternalServerErrorException(err);
+    }
+  }
 }

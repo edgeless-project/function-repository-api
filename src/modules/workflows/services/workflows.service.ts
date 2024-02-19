@@ -202,7 +202,7 @@ export class WorkflowsService {
           id, 
           version, 
           code_file_id, 
-          output_callbacks 
+          outputs 
         } = await this.functionModel.findOne({ _id: func.class_specification });
         functions.push({
           name: func.name,
@@ -211,7 +211,7 @@ export class WorkflowsService {
             id, 
             version, 
             code_file_id, 
-            output_callbacks 
+            outputs 
           },
           output_mapping: func.output_mapping,
           annotations: func.annotations

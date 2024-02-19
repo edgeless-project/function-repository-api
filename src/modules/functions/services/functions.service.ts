@@ -80,7 +80,7 @@ export class FunctionService {
         id,
         version,
         code_file_id,
-        output_callbacks,
+        outputs,
         _id
       } = await this.functionModel.create({owner, ...functionData});
 
@@ -89,7 +89,7 @@ export class FunctionService {
         function_type,
         version,
         code_file_id,
-        output_callbacks,
+        outputs,
       }
       this.logger.debug('createFunction: responseBody',responseBody);
       return responseBody;
@@ -206,7 +206,7 @@ export class FunctionService {
       const {
         function_type,
         code_file_id,
-        output_callbacks
+        outputs
       } = await this.functionModel.findOneAndUpdate(
         {
           id, 
@@ -216,7 +216,7 @@ export class FunctionService {
         { $set: {
           function_type: functionData.function_type,
           code_file_id: functionData.code_file_id,
-          output_callbacks: functionData.output_callbacks
+          outputs: functionData.outputs
         } },
         { new: true }
       );
@@ -226,7 +226,7 @@ export class FunctionService {
         function_type,
         version,
         code_file_id,
-        output_callbacks,
+        outputs,
       }
       this.logger.debug('updateFunction: responseBody',responseBody);
       return responseBody;

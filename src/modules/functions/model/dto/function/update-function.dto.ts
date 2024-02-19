@@ -27,6 +27,6 @@ export class UpdateFunctionDto  {
     })
     @IsDefined()
     @IsNotEmpty()
-    output_callbacks: string[];
+    outputs: string[];
 
 }

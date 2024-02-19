@@ -3,5 +3,5 @@ export interface FunctionClassSpecification {
     function_type: string;
     version: string;
     code_file_id: string;
-    output_callbacks: string[];
+    outputs: string[];
 }

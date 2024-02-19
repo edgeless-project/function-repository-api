@@ -21,7 +21,7 @@ export class Function {
   code_file_id: string;
 
   @Prop()
-  output_callbacks: string[];
+  outputs: string[];
 }
 
 export const FunctionSchema = SchemaFactory.createForClass(Function);

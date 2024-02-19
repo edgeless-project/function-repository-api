@@ -47,6 +47,6 @@ export class FunctionClassSpecificationDto implements FunctionClassSpecification
     })
     @IsDefined()
     @IsNotEmpty()
-    output_callbacks: string[];
+    outputs: string[];
 
 }

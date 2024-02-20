@@ -27,7 +27,6 @@ export class UpdateWorkflowDto {
 
     @ApiProperty({
         description: 'The workflow annotations',
-        type:[AnnotationDto],
         required: true
     })
     @IsDefined()

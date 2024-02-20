@@ -12,6 +12,7 @@ import { ResponseUploadFunctionCodeDto } from '../model/dto/function/response-up
 import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete-function.dto';
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
+import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
 
 
 @Injectable()
@@ -81,6 +82,8 @@ export class FunctionService {
         version,
         code_file_id,
         outputs,
+        createdAt,
+        updatedAt,
         _id
       } = await this.functionModel.create({owner, ...functionData});
 
@@ -90,6 +93,8 @@ export class FunctionService {
         version,
         code_file_id,
         outputs,
+        createdAt,
+        updatedAt
       }
       this.logger.debug('createFunction: responseBody',responseBody);
       return responseBody;
@@ -206,7 +211,9 @@ export class FunctionService {
       const {
         function_type,
         code_file_id,
-        outputs
+        outputs,
+        createdAt,
+        updatedAt
       } = await this.functionModel.findOneAndUpdate(
         {
           id, 
@@ -227,6 +234,8 @@ export class FunctionService {
         version,
         code_file_id,
         outputs,
+        createdAt,
+        updatedAt
       }
       this.logger.debug('updateFunction: responseBody',responseBody);
       return responseBody;
@@ -299,7 +308,7 @@ export class FunctionService {
     }
   }
 
-  async getFunction(id: string, owner: string, version?: string): Promise<FunctionClassSpecificationDto> {
+  async getFunction(id: string, owner: string, version?: string): Promise<ResponseFunctionDto> {
     let functionData = null;
     // If version is defined, we get that version
     if (version) {
@@ -353,7 +362,7 @@ export class FunctionService {
     return { versions };
   }
 
-  async findFunctions(offset: number, limit: number) {
+  async findFunctions(offset: number, limit: number): Promise<ResponseFunctionListDto> {
     try {
 
       // Count the total number of functions
@@ -379,10 +388,12 @@ export class FunctionService {
         { $limit: limit }
       ]).exec();
 
-      const items = result.map(w => ({
-        id: w.id,
-        function_type: w.function_type,
-        version: w.version
+      const items = result.map(f => ({
+        id: f.id,
+        function_type: f.function_type,
+        version: f.version,
+        createdAt: f.createdAt,
+        updatedAt: f.updatedAt
       }));
 
       return {

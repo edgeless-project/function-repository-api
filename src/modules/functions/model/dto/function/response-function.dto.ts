@@ -5,12 +5,16 @@ import { FunctionClassSpecificationDto } from "./class-specification.dto";
 
 export class ResponseFunctionDto extends FunctionClassSpecificationDto {
     @ApiProperty({
-        example: '652e956327414066ebf42b2a',
-        description: 'The function class id',
+        example: '2024-01-20T06:57:25.563Z',
+        description: 'Timestamp indicating when the record was initially created in the database.',
         required: true
     })
-    @IsDefined()
-    @IsNotEmpty()
-    id: string;
+    createdAt: Date;
 
+    @ApiProperty({
+        example: '2024-02-12T10:02:45.123Z',
+        description: 'Timestamp showing the most recent time the record was updated in the database.',
+        required: true
+    })
+    updatedAt: Date;
 }

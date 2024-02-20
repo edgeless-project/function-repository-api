@@ -1,9 +1,10 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Type } from 'class-transformer';
 
 export type FunctionDocument = Function & Document;
 
-@Schema() 
+@Schema({ timestamps: true }) 
 export class Function {
   @Prop()
   function_type: string;
@@ -22,6 +23,14 @@ export class Function {
 
   @Prop()
   outputs: string[];
+
+  @Type(() => Date)
+  @Prop()
+  createdAt: Date;
+
+  @Type(() => Date)
+  @Prop()
+  updatedAt: Date;
 }
 
 export const FunctionSchema = SchemaFactory.createForClass(Function);

@@ -7,7 +7,5 @@ export class ResponseUploadFunctionCodeDto {
         description: 'The function code id',
         required: true
     })
-    @IsDefined()
-    @IsNotEmpty()
     id: string;
 }

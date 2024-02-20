@@ -1,7 +1,5 @@
 import { Controller, Logger, Post, Body, Put, UseInterceptors, UploadedFile, Get, Param, Query, Delete, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiBody, ApiQuery } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
 
 import { WorkflowsService } from '../services/workflows.service';
 import { WorkflowDto } from '../model/dto/workflow.dto';
@@ -10,6 +8,7 @@ import { ResponseDeleteWorkflowDto } from '../model/dto/response-delete-workflow
 import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
 import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
 import { ResponseWorkflowListDto } from '../model/dto/response-workflow-list.dto';
+import { ResponseWorkflowDto } from '../model/dto/response-workflow.dto';
 
 @ApiTags('Admin')
 @Controller('admin/workflow')
@@ -23,7 +22,7 @@ export class AdminWorkflowsController {
     summary: '',
     description: 'This service creates a new workflow.'
   })
-  @ApiOkResponse({ type: WorkflowDto})
+  @ApiOkResponse({ type: ResponseWorkflowDto})
   @ApiConsumes('application/json', 'application/x-www-form-urlencoded')
   async createWorkflow(@Body() eventData: CreateWorkflowDto) {
     return this.workflowsService.createWorkflow(eventData, "admin");
@@ -34,7 +33,7 @@ export class AdminWorkflowsController {
     summary: '',
     description: 'This service updates a workflow by its name.'
   })
-  @ApiOkResponse({ type: WorkflowDto})
+  @ApiOkResponse({ type: ResponseWorkflowDto})
   async updateWorkflow(@Body() eventData: UpdateWorkflowDto, @Param('name') name: string) {
     return this.workflowsService.updateWorkflow(name, eventData, "admin");
   }
@@ -54,7 +53,7 @@ export class AdminWorkflowsController {
     summary: '',
     description: 'This service gets a new workflow by its name.'
   })
-  @ApiOkResponse({ type: WorkflowDto})
+  @ApiOkResponse({ type: ResponseWorkflowDto})
   @ApiConsumes('application/json', 'application/x-www-form-urlencoded')
   async getWorkflow(@Param('name') name: string) {
     return this.workflowsService.getWorkflow(name, "admin");

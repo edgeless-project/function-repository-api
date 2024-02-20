@@ -1,12 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { WorkflowDto } from "./workflow.dto";
 
-class BasicWorkflowDto {
-    @ApiProperty({
-        example: 'test-workflow',
-        description: 'The workflow name',
-        required: true
-    })
-    name: string;
+export class ResponseWorkflowDto extends WorkflowDto {
 
     @ApiProperty({
         example: '2024-01-20T06:57:25.563Z',
@@ -21,15 +16,5 @@ class BasicWorkflowDto {
         required: true
     })
     updatedAt: Date;
-}
 
-export class ResponseWorkflowListDto {
-    @ApiProperty({ required: true })
-    items: BasicWorkflowDto[];
-    @ApiProperty({ required: true })
-    total: number;
-    @ApiProperty({ required: true })
-    limit: number;
-    @ApiProperty({ required: true })
-    offset: number;
 }

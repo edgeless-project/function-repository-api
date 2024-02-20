@@ -1,5 +1,6 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
+import { Type } from 'class-transformer';
 
 export type WorkflowDocument = Workflow & mongoose.Document;
 
@@ -26,7 +27,7 @@ class WorkflowFunction {
   annotations: any;
 }
 
-@Schema() 
+@Schema({ timestamps: true }) 
 export class Workflow {
   @Prop()
   name: string;
@@ -48,6 +49,14 @@ export class Workflow {
     default: {}
   })
   annotations: any;
+
+  @Type(() => Date)
+  @Prop()
+  createdAt: Date;
+
+  @Type(() => Date)
+  @Prop()
+  updatedAt: Date;
 }
 
 export const WorkflowSchema = SchemaFactory.createForClass(Workflow);

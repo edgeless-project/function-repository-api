@@ -80,7 +80,9 @@ export class WorkflowsService {
         name: result.name,
         functions: result.functions,
         resources: result.resources,
-        annotations: result.annotations
+        annotations: result.annotations,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt
       };
 
       this.logger.debug('createWorkflow: responseBody',responseBody);
@@ -159,7 +161,9 @@ export class WorkflowsService {
         name,
         functions: result.functions,
         resources: result.resources,
-        annotations: result.annotations
+        annotations: result.annotations,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt
       };
 
       this.logger.debug('updateWorkflow: responseBody',responseBody);
@@ -222,7 +226,9 @@ export class WorkflowsService {
         name,
         functions,
         resources: workflowData.resources,
-        annotations: workflowData.annotations
+        annotations: workflowData.annotations,
+        createdAt: workflowData.createdAt,
+        updatedAt: workflowData.updatedAt
       }
 
       this.logger.debug('createWorkflow: responseBody',responseBody);
@@ -237,12 +243,16 @@ export class WorkflowsService {
   async findWorkflows(offset: number, limit: number) {
     try {
       const total = await this.workflowModel.countDocuments().exec();
-      const result = await this.workflowModel.find({}, { ['name']: 1, _id: 0 })
+      const result = await this.workflowModel.find({}, { ['name']: 1, ['createdAt']: 1, ['updatedAt']: 1, _id: 0 })
         .limit(limit)
         .skip(offset)
         .exec();
 
-      const items = result.map(w => ({name: w.name}));
+      const items = result.map(w => ({
+        name: w.name,
+        createdAt: w.createdAt,
+        updatedAt: w.updatedAt
+      }));
 
       return {
         items,

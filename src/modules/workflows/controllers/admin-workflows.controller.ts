@@ -51,12 +51,20 @@ export class AdminWorkflowsController {
   @Get(':name')
   @ApiOperation({
     summary: '',
-    description: 'This service gets a new workflow by its name.'
+    description: 'This service gets a workflow by its name including the function class specification for each function. If exclude_class_specification is set to true, the function class specification will be omitted.'
   })
   @ApiOkResponse({ type: ResponseWorkflowDto})
+  @ApiQuery({
+    name: 'exclude_class_specification',
+    required: false,
+    type: Boolean,
+  })
   @ApiConsumes('application/json', 'application/x-www-form-urlencoded')
-  async getWorkflow(@Param('name') name: string) {
-    return this.workflowsService.getWorkflow(name, "admin");
+  async getWorkflow(
+    @Param('name') name: string,
+    @Query('exclude_class_specification') excludeClassSpecification: boolean = false,
+  ) {
+    return this.workflowsService.getWorkflow(name, excludeClassSpecification, "admin");
   }
 
   @Get('')

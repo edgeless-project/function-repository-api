@@ -190,7 +190,7 @@ export class WorkflowsService {
     }
   }
 
-  async getWorkflow(name: string, owner: string) {
+  async getWorkflow(name: string, excludeClassSpecification: boolean, owner: string) {
     try {
       const workflowData = await this.workflowModel.findOne({ name, owner });
 
@@ -208,18 +208,29 @@ export class WorkflowsService {
           code_file_id, 
           outputs 
         } = await this.functionModel.findOne({ _id: func.class_specification });
-        functions.push({
-          name: func.name,
-          class_specification: {
-            function_type, 
-            id, 
-            version, 
-            code_file_id, 
-            outputs 
-          },
-          output_mapping: func.output_mapping,
-          annotations: func.annotations
-        });
+        if (excludeClassSpecification) {
+          functions.push({
+            name: func.name,
+            class_specification_id: id,
+            class_specification_version: version,
+            output_mapping: func.output_mapping,
+            annotations: func.annotations
+          });
+        } else {
+          functions.push({
+            name: func.name,
+            class_specification: {
+              function_type, 
+              id, 
+              version, 
+              code_file_id, 
+              outputs 
+            },
+            output_mapping: func.output_mapping,
+            annotations: func.annotations
+          });
+        }
+        
       }
 
       const responseBody = {

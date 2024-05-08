@@ -22,11 +22,13 @@ export class AppModule {
   static isDev: boolean;
   static globalPrefix: string;
   static config: ConfigService;
+  static frontUrl: string;
 
   constructor(private readonly config: ConfigService) {
     AppModule.port = config.get('API_PORT');
     AppModule.globalPrefix = config.get('API_GLOBAL_PREFIX');
     AppModule.isDev = config.isDev;
     AppModule.config = config;
+    AppModule.frontUrl = config.get('APP_FRONT_URL');
   }
 }

@@ -17,12 +17,20 @@ async function bootstrap() {
 
   app.setGlobalPrefix(AppModule.globalPrefix);
 
-  app.use(helmet({ crossOriginResourcePolicy: false }));
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
   app.use(loggerMiddleware);
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.useGlobalGuards(new AccessGuard(new Reflector()));
+
+  // Allow CORS from the front URL
+  app.enableCors({
+    origin: AppModule.frontUrl,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
+    credentials: true,
+  });
 
   setupSwagger(app, AppModule.config);
 

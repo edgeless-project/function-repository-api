@@ -1,6 +1,6 @@
 import { HttpException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import {Model, PipelineStage, Types} from 'mongoose';
 
 import { ConfigService } from '../../../common/config/config.service';
 import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
@@ -13,6 +13,7 @@ import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
+import {of} from "rxjs";
 
 
 @Injectable()
@@ -362,31 +363,33 @@ export class FunctionService {
     return { versions };
   }
 
-  async findFunctions(offset: number, limit: number): Promise<ResponseFunctionListDto> {
+  async findFunctions(offset: number, limit: number, id_partial?: string): Promise<ResponseFunctionListDto> {
     try {
 
-      // Count the total number of functions
-      const totalCount = await this.functionModel.aggregate([
-        {
-          $group: {
-            _id: "$id"
-          }
-        },
-        {
-          $count: "total"
-        }
-      ]);
-
-      const total = totalCount.length > 0 ? totalCount[0].total : 0;
-
       // Get the functions (only the latest version of each function)
-      const result = await this.functionModel.aggregate([
+      let searchParameters:PipelineStage[]=[
         { $sort: { version: -1 } },
         { $group: { _id: "$id", lastObject: { $first: "$$ROOT" } } },
-        { $replaceRoot: { newRoot: "$lastObject" } },
-        { $skip: offset },
-        { $limit: limit }
-      ]).exec();
+        { $replaceRoot: { newRoot: "$lastObject" } }
+      ];
+
+      let countParameters:PipelineStage[]=[
+        { $group: { _id: "$id" } }
+      ];
+
+      if (typeof id_partial !== 'undefined'){
+        //In case of partial id set, set match parameter using regex
+        searchParameters.push({ $match: { "id": { "$regex": id_partial, "$options": "i" } }});
+        countParameters.push({ $match: { "_id": { "$regex": id_partial, "$options": "i" } }});
+      }
+
+      searchParameters.push(
+          { $skip: offset },
+          { $limit: limit });
+
+      countParameters.push({ $count: "total" });
+
+      const result = await this.functionModel.aggregate(searchParameters).exec();
 
       const items = result.map(f => ({
         id: f.id,
@@ -395,6 +398,10 @@ export class FunctionService {
         createdAt: f.createdAt,
         updatedAt: f.updatedAt
       }));
+
+      // Count the total number of functions
+      const totalCount = await this.functionModel.aggregate(countParameters);
+      let total = totalCount.length > 0 ? totalCount[0].total : 0;
 
       return {
         items,

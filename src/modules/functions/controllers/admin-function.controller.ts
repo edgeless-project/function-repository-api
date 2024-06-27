@@ -142,7 +142,7 @@ export class AdminFunctionController {
   @Get('')
   @ApiOperation({
     summary: '',
-    description: 'This service gets the list of available functions with pagination (by using limit and offset query params), by default limit=10, offset=0. Can be used to get functions by partial ID. Returns the total number of functions (total attribute).'
+    description: 'This service gets the list of available functions with pagination (by using limit and offset query params), by default limit=10, offset=0. Can be used to search a function by partial match. Returns the total number of functions (total attribute).'
   })
   @ApiOkResponse({ type: ResponseFunctionListDto})
   @ApiQuery({
@@ -156,16 +156,16 @@ export class AdminFunctionController {
     type: Number,
   })
   @ApiQuery({
-    name: 'partial id',
+    name: 'partial_search',
     required: false,
     type: String,
   })
   async findFunctions(
     @Query('offset', new OptionalParseIntPipe('0')) offset: number,
     @Query('limit', new OptionalParseIntPipe('10')) limit: number,
-    @Query('partial id') partial_id: string = null
+    @Query('partial_search') partial_search: string = null
   ) {
-    if (partial_id) return this.functionService.findFunctions(offset, limit, partial_id);
+    if (partial_search) return this.functionService.findFunctions(offset, limit, partial_search);
     else return this.functionService.findFunctions(offset, limit);
   }
 }

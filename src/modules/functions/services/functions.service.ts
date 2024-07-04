@@ -2,7 +2,6 @@ import { HttpException, Injectable, InternalServerErrorException, Logger, NotAcc
 import { InjectModel } from '@nestjs/mongoose';
 import {Model, PipelineStage, Types} from 'mongoose';
 
-import { ConfigService } from '../../../common/config/config.service';
 import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
 import { Function, FunctionDocument } from '../schemas/function.schema';
 import { FunctionCode, FunctionCodeDocument } from '../schemas/function-code.schema';
@@ -13,7 +12,6 @@ import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
-import {of} from "rxjs";
 
 
 @Injectable()

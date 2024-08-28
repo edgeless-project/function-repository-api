@@ -1,24 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
 
-export class UpdateFunctionDto  {
-    @ApiProperty({
-        example: 'RUST_WASM',
-        description: 'The function type',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    function_type: string;
-
-    @ApiProperty({
-        example: '652faf54465c2e7ec15facce',
-        description: 'The code file id',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
+export interface function_types {
+    type: string;
     code_file_id: string;
+}
+
+export class UpdateFunctionDto  {
+   @ApiProperty({
+        example: '[{type: "RUST_WASM", code_file_id: "652faf54465c2e7ec15facce"}]',
+        description: 'The function types and code file id per type',
+        required: true
+    })
+    @IsDefined()
+    @IsNotEmpty()
+    function_types: function_types[];
 
     @ApiProperty({
         example: '["success_cb", "failure_cb"]',

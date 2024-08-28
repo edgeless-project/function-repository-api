@@ -12,6 +12,7 @@ import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
+import {function_types} from "@modules/functions/model/contract/function/class-specification.interface";
 
 
 @Injectable()
@@ -26,15 +27,21 @@ export class FunctionService {
 
   async createFunction(functionData: FunctionClassSpecificationDto, owner: string): Promise<ResponseFunctionDto> {
 
-    if (!functionData.code_file_id) {
-      this.logger.error('createFunction: code_file_id not provided');
-      throw new NotAcceptableException('code_file_id not provided');
+    if (!functionData.function_types) {
+      this.logger.error('createFunction: code_file_id and type not provided');
+      throw new NotAcceptableException('Function types not provided');
+    }
+
+    let function_types:function_types[] = [];
+    let lastCreated = {
+      createdAt: Date.prototype,
+      updatedAt : Date.prototype,
     }
 
     // Check if there exists already a function with that id and version
     try {
       const resp = await this.functionModel.exists({
-        id: functionData.id, 
+        id: functionData.id,
         version: functionData.version,
         owner
       });
@@ -47,61 +54,81 @@ export class FunctionService {
       throw new NotAcceptableException(msg);
     }
 
-    // Check if the code file exists in the temp collection and get it
-    let tempCodeFile = null;
-    try {
-      tempCodeFile = await this.functionTempCodeModel.findById(functionData.code_file_id);
-      if (!tempCodeFile) throw new Error();
-    } catch (err) {
-      const msg = "There isn't a function code with the provided code_file_id";
-      this.logger.error("createFunction: " + msg);
-      throw new NotAcceptableException(msg);
-    }
-
-    // Copy the temp code file from the temp collection to the stable collection
-    try {
-      await this.functionCodeModel.create({
-        mimetype: tempCodeFile.mimetype,
-        originalname: tempCodeFile.originalname,
-        code: tempCodeFile.code,
-        _id: tempCodeFile._id
-      });
-
-      await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
-    } catch (err) {
-      this.logger.error('createFunction: Server error', err);
-      throw new InternalServerErrorException('Server error');
-    }
-
-    // Create the function class
-    try {
-      const {
-        function_type,
-        id,
-        version,
-        code_file_id,
-        outputs,
-        createdAt,
-        updatedAt,
-        _id
-      } = await this.functionModel.create({owner, ...functionData});
-
-      const responseBody = {
-        id,
-        function_type,
-        version,
-        code_file_id,
-        outputs,
-        createdAt,
-        updatedAt
+    for (const t of functionData.function_types) {
+      if (!t.code_file_id) {
+        this.logger.error('createFunction: code_file_id not provided');
+        throw new NotAcceptableException('code_file_id not provided');
       }
-      this.logger.debug('createFunction: responseBody',responseBody);
-      return responseBody;
-  
-    } catch (err) {
-      this.logger.error('createFunction: Server error', err);
-      throw new InternalServerErrorException('Server error');
+      if (!t.type) {
+        this.logger.error('createFunction: type not provided');
+        throw new NotAcceptableException('type not provided');
+      }
+
+      // Check if the code file exists in the temp collection and get it
+      let tempCodeFile = null;
+      try {
+        tempCodeFile = await this.functionTempCodeModel.findById(t.code_file_id);
+        if (!tempCodeFile) throw new Error();
+      } catch (err) {
+        const msg = "There isn't a function code with the provided code_file_id";
+        this.logger.error("createFunction: " + msg);
+        throw new NotAcceptableException(msg);
+      }
+
+      // Copy the temp code file from the temp collection to the stable collection
+      try {
+        await this.functionCodeModel.create({
+          mimetype: tempCodeFile.mimetype,
+          originalname: tempCodeFile.originalname,
+          code: tempCodeFile.code,
+          _id: tempCodeFile._id
+        });
+
+        await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
+      } catch (err) {
+        this.logger.error('createFunction: Server error', err);
+        throw new InternalServerErrorException('Server error');
+      }
+      // Create the function class
+      try {
+        const {
+          function_type,
+          id,
+          version,
+          code_file_id,
+          outputs,
+          createdAt,
+          updatedAt,
+          _id
+        } = await this.functionModel.create({
+          owner:owner,
+          id: functionData.id,
+          version: functionData.version,
+          code_file_id: t.code_file_id,
+          function_type: t.type,
+          outputs: functionData.outputs,
+        });
+
+        function_types.push({code_file_id: code_file_id, type: function_type});
+        lastCreated.createdAt = createdAt;
+        lastCreated.updatedAt = updatedAt;
+
+      } catch (err) {
+        this.logger.error('createFunction: Server error', err);
+        throw new InternalServerErrorException('Server error');
+      }
     }
+    const responseBody = {
+      id: functionData.id,
+      version: functionData.version,
+      function_types: function_types,
+      createdAt: lastCreated.createdAt,
+      updatedAt: lastCreated.updatedAt,
+      outputs: functionData.outputs
+    }
+
+    this.logger.debug('createFunction: responseBody', responseBody);
+    return responseBody;
   }
 
   async saveFunctionCode(file: Express.Multer.File): Promise<ResponseUploadFunctionCodeDto> {
@@ -141,119 +168,191 @@ export class FunctionService {
   }
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
+    //TODO: Test functionality multiple types
 
-    if (!functionData.code_file_id) {
-      const msg = 'code_file_id not provided';
-      this.logger.error('updateFunction: ' + msg);
-      throw new NotAcceptableException(msg);
+    let function_types:function_types[] = [];
+    let lastCreated = {
+      createdAt: Date.prototype,
+      updatedAt : Date.prototype,
     }
 
-    // Check if the function exists with that id and version
-    let functionPrev = null;
-    try {
-      functionPrev = await this.functionModel.findOne({
-        id, 
-        version,
-        owner
-      }).exec();
-      if (!functionPrev) {
-        throw new Error("Function doesn't exist, please create a function first");
+    //Get existing types for function
+    let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
+    if (!resp) {
+      throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
+    }
+    for (const f of resp) {
+      function_types.push({type:f.function_type, code_file_id: f.code_file_id});
+    }
+
+    // Delete expired function types that are on db but not on update request
+    if (function_types.length > functionData.function_types.length) {
+      let typesReq = [];
+      functionData.function_types.forEach(t => {typesReq.push(t.type)});
+      function_types.forEach(t => {
+        if (!typesReq.includes(t.type)){
+          this.deleteFunction(id, owner, version, t.type);
+        }
+      });
+    }
+
+    //  Create new function types
+    else if (function_types.length < functionData.function_types.length) {
+      let typesReq = [];
+      functionData.function_types.forEach(t => {typesReq.push(t.type)});
+      for (const t of function_types) {
+        if (!typesReq.includes(t.type)){
+          // Create the function class
+          try {
+            const {
+              _id
+            } = await this.functionModel.create({
+              owner:owner,
+              id: id,
+              version: version,
+              code_file_id: t.code_file_id,
+              function_type: t.type,
+              outputs: functionData.outputs,
+            });
+
+          } catch (err) {
+            this.logger.error('updateFunction: Server error on create function', err);
+            throw new InternalServerErrorException('Server error');
+          }
+        }
       }
-    } catch {
-      const msg = `updateFunction: A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`;
-      this.logger.error("updateFunction: " + msg);
-      throw new NotAcceptableException(msg);
     }
 
-    // Check if the code file is new
-    const newFileCode = functionData.code_file_id === functionPrev.code_file_id ? false : true;
+    //Update existing files
+    for (const function_type of functionData.function_types) {
 
-    if (newFileCode) {
-      // Check if the code file exists in the temp collection and get it
-      let tempCodeFile = null;
+      if (!function_type.code_file_id) {
+        const msg = 'code_file_id not provided';
+        this.logger.error('updateFunction: ' + msg);
+        throw new NotAcceptableException(msg);
+      }
+      if (!function_type.type) {
+        const msg = 'type not provided';
+        this.logger.error('updateFunction: ' + msg);
+        throw new NotAcceptableException(msg);
+      }
+
+      const type = function_type.type;
+      const file_id = function_type.code_file_id;
+
+      // Check if the function exists with that id and version
+      let functionPrev = null;
       try {
-        tempCodeFile = await this.functionTempCodeModel.findById(functionData.code_file_id);
-        if (!tempCodeFile) throw new Error();
-      } catch (err) {
-        const msg = "There isn't a function code with the provided code_file_id";
+        functionPrev = await this.functionModel.findOne({
+          id,
+          version,
+          type,
+          owner
+        }).exec();
+        if (!functionPrev) {
+          throw new Error("Function doesn't exist, please create a function first");
+        }
+      } catch {
+        const msg = `updateFunction: A function with the id: ${id}, version: ${version}, type: ${type} and owner: ${owner} doesn't exist.`;
         this.logger.error("updateFunction: " + msg);
         throw new NotAcceptableException(msg);
       }
-  
-      // Copy the temp code file from the temp collection to the stable collection
+
+      // Check if the code file is new
+      const newFileCode = file_id !== functionPrev.code_file_id;
+
+      if (newFileCode) {
+        // Check if the code file exists in the temp collection and get it
+        let tempCodeFile = null;
+        try {
+          tempCodeFile = await this.functionTempCodeModel.findById(file_id);
+          if (!tempCodeFile) throw new Error();
+        } catch (err) {
+          const msg = "There isn't a function code with the provided code_file_id";
+          this.logger.error("updateFunction: " + msg);
+          throw new NotAcceptableException(msg);
+        }
+
+        // Copy the temp code file from the temp collection to the stable collection
+        try {
+          await this.functionCodeModel.create({
+            mimetype: tempCodeFile.mimetype,
+            originalname: tempCodeFile.originalname,
+            code: tempCodeFile.code,
+            _id: tempCodeFile._id
+          });
+
+          await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
+        } catch (err) {
+          this.logger.error('updateFunction: Server error', err);
+          throw new InternalServerErrorException('Server error');
+        }
+
+        // Delete the old code file from the stable collection
+        try {
+          await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionPrev.code_file_id) });
+        } catch (err) {
+          this.logger.error('updateFunction: Server error', err);
+          throw new InternalServerErrorException('Server error');
+        }
+      }
+
+      // Update the function class
       try {
-        await this.functionCodeModel.create({
-          mimetype: tempCodeFile.mimetype,
-          originalname: tempCodeFile.originalname,
-          code: tempCodeFile.code,
-          _id: tempCodeFile._id
-        });
-  
-        await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
+        const {
+          function_type,
+          code_file_id,
+          outputs,
+          createdAt,
+          updatedAt
+        } = await this.functionModel.findOneAndUpdate(
+            {
+              id,
+              version,
+              type,
+              owner
+            },
+            { $set: {
+                code_file_id: file_id,
+                outputs: functionData.outputs
+              } },
+            { new: true }
+        );
+
+        function_types.push({code_file_id: code_file_id, type: function_type});
+        lastCreated.createdAt = createdAt;
+        lastCreated.updatedAt = updatedAt;
+
       } catch (err) {
         this.logger.error('updateFunction: Server error', err);
         throw new InternalServerErrorException('Server error');
       }
-
-      // Delete the old code file from the stable collection
-      try {
-        await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionPrev.code_file_id) });
-      } catch (err) {
-        this.logger.error('updateFunction: Server error', err);
-        throw new InternalServerErrorException('Server error');
-      }
-
     }
 
-    // Update the function class
-    try {
-      const {
-        function_type,
-        code_file_id,
-        outputs,
-        createdAt,
-        updatedAt
-      } = await this.functionModel.findOneAndUpdate(
-        {
-          id, 
-          version,
-          owner
-        },
-        { $set: {
-          function_type: functionData.function_type,
-          code_file_id: functionData.code_file_id,
-          outputs: functionData.outputs
-        } },
-        { new: true }
-      );
-
-      const responseBody = {
-        id,
-        function_type,
-        version,
-        code_file_id,
-        outputs,
-        createdAt,
-        updatedAt
-      }
-      this.logger.debug('updateFunction: responseBody',responseBody);
-      return responseBody;
-  
-    } catch (err) {
-      this.logger.error('updateFunction: Server error', err);
-      throw new InternalServerErrorException('Server error');
+    const responseBody = {
+      id: id,
+      version: version,
+      function_types: function_types,
+      createdAt: lastCreated.createdAt,
+      updatedAt: lastCreated.updatedAt,
+      outputs: functionData.outputs
     }
+
+    this.logger.debug('updateFunction: responseBody',responseBody);
+    return responseBody;
+
   }
 
-  async deleteFunction(id: string, owner: string, version?: string): Promise<ResponseDeleteFunctionDto> {
+  async deleteFunction(id: string, owner: string, version?: string, type?: string): Promise<ResponseDeleteFunctionDto> {
+    //TODO: Test functionality multiple types && Update Swagger UI
     let totalDeletedCount = 0;
 
     // If version is defined, only that function version is deleted
-    if (version) {
+    if (version && type) {
       // Get function data
-      const functionData = await this.functionModel.findOne({ id, version }).exec();
+      const functionData = await this.functionModel.findOne({ id, version, type}).exec();
       if (!functionData) {
-        const msg = `A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`;
+        const msg = `A function with the id: ${id}, version: ${version}, type ${type} and owner: ${owner} doesn't exist.`;
         this.logger.error('deleteFunction: ' + msg);
         throw new NotFoundException();
       }
@@ -267,6 +366,34 @@ export class FunctionService {
         const { deletedCount } = await this.functionModel.deleteOne({ _id: new Types.ObjectId(functionData._id), owner});
 
         totalDeletedCount += deletedCount;
+      } catch (err) {
+        this.logger.error('deleteFunction: ', err);
+        throw new InternalServerErrorException(err);
+      }
+    }
+
+    //If version is defined but type is not, all the types of a function and version are deleted
+    else if(version){
+      const functionsData = await this.functionModel.find({ id, version, owner });
+      if (functionsData.length === 0) {
+        const msg = `There is no function with the id: ${id}, version ${version} and owner: ${owner}`;
+        this.logger.error('deleteFunction: ' + msg);
+        throw new NotFoundException(msg);
+      }
+
+      try {
+        for (let i = 0; i < functionsData.length; i++) {
+          const functionData = functionsData[i];
+
+          // Delete function code
+          await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionData.code_file_id) });
+
+          // Delete function
+          const { deletedCount } = await this.functionModel.deleteOne({ id: functionData.id, version: functionData.version, owner });
+
+          totalDeletedCount += deletedCount;
+
+        }
       } catch (err) {
         this.logger.error('deleteFunction: ', err);
         throw new InternalServerErrorException(err);
@@ -307,15 +434,50 @@ export class FunctionService {
     }
   }
 
-  async getFunction(id: string, owner: string, version?: string): Promise<ResponseFunctionDto> {
+  async getFunction(id: string, owner: string, version?: string, type?: string): Promise<ResponseFunctionDto> {
+    //TODO: Test functionality multiple types && Update Swagger UI
     let functionData = null;
-    // If version is defined, we get that version
-    if (version) {
+
+    // If version and type are defined, we get that specific function
+    if (version && type) {
       try {
-        functionData = await this.functionModel.findOne({ id, version, owner }).lean().exec();
-        if (!functionData) {
+        let resp = await this.functionModel.findOne({ id, version, type, owner }).lean().exec();
+        if (!resp) {
           throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
         }
+
+        functionData = {
+          id: id,
+          version: resp.version,
+          outputs: resp.outputs,
+          function_types:[{type: resp.function_type, code_file_id: resp.code_file_id}]
+        };
+
+
+      } catch (err) {
+        this.logger.error('getFunction: ', err);
+        throw new NotFoundException(err);
+      }
+    }
+
+    // If version but not type is defined, we get that specific function
+    else if (version) {
+      try {
+        let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
+        if (!resp) {
+          throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
+        }
+
+        functionData = {
+          id: id,
+          version: resp[0].version,
+          outputs: resp[0].outputs,
+          function_types:[]
+        };
+        for (const f of resp) {
+          functionData.function_types.push({type:f.function_type, code_file_id: f.code_file_id});
+        }
+
       } catch (err) {
         this.logger.error('getFunction: ', err);
         throw new NotFoundException(err);
@@ -325,10 +487,26 @@ export class FunctionService {
     // If not, we get the latest version
     else {
       try {
-        functionData = await this.functionModel.findOne({ id, owner }).sort({ version: -1 }).lean().exec();
-        if (!functionData) {
+        let lastVersion = await this.functionModel.findOne({ id, owner }).sort({ version: -1 }).lean().exec();
+        if (!lastVersion) {
           throw new Error(`A function with the id: ${id} and owner:${owner} doesn't exist.`);
         }
+
+        let resp = await this.functionModel.find({ id:id, version: lastVersion.version , owner: owner }).lean().exec();
+        if (!resp) {
+          throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
+        }
+
+        functionData = {
+          id: id,
+          version: resp[0].version,
+          outputs: resp[0].outputs,
+          function_types:[]
+        };
+        for (const f of resp) {
+          functionData.function_types.push({type:f.function_type, code_file_id: f.code_file_id});
+        }
+
       } catch (err) {
         this.logger.error('getFunction: ', err);
         throw new NotFoundException(err);
@@ -357,11 +535,17 @@ export class FunctionService {
       this.logger.error('getFunctionVersions: ' + msg);
       throw new NotFoundException(msg);
     }
-    const versions = functionsData.map(item => item.version);
+    let versions = [];
+    functionsData.map(item => {
+      if (!versions.includes(item.version))
+        versions.push(item.version);
+    });
+
     return { versions };
   }
 
   async findFunctions(offset: number, limit: number, id_partial?: string): Promise<ResponseFunctionListDto> {
+    //TODO: Function_types update
     try {
 
       // Get the functions (only the latest version of each function)

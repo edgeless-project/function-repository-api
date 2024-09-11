@@ -28,4 +28,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/edgeless/function-repository-api:latest
+        tags: edgeless/function-repository-api:latest

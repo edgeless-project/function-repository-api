@@ -168,9 +168,10 @@ export class FunctionService {
   }
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
-    //TODO: Test functionality multiple types
+    //TODO: Test functionality multiple types.
+    //TODO: If func code in DB nothing, if not and code id  look for temp. Else if type not on body delete type.
 
-    let function_types:function_types[] = [];
+    let stored_types:function_types[] = [];
     let lastCreated = {
       createdAt: Date.prototype,
       updatedAt : Date.prototype,
@@ -178,18 +179,19 @@ export class FunctionService {
 
     //Get existing types for function
     let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
+    this.logger.debug(resp);
     if (!resp) {
       throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
     }
     for (const f of resp) {
-      function_types.push({type:f.function_type, code_file_id: f.code_file_id});
+      stored_types.push({type:f.function_type, code_file_id: f.code_file_id});
     }
 
     // Delete expired function types that are on db but not on update request
-    if (function_types.length > functionData.function_types.length) {
+    if (stored_types.length > functionData.function_types.length) {
       let typesReq = [];
       functionData.function_types.forEach(t => {typesReq.push(t.type)});
-      function_types.forEach(t => {
+      stored_types.forEach(t => {
         if (!typesReq.includes(t.type)){
           this.deleteFunction(id, owner, version, t.type);
         }
@@ -197,10 +199,10 @@ export class FunctionService {
     }
 
     //  Create new function types
-    else if (function_types.length < functionData.function_types.length) {
+    else if (stored_types.length < functionData.function_types.length) {
       let typesReq = [];
       functionData.function_types.forEach(t => {typesReq.push(t.type)});
-      for (const t of function_types) {
+      for (const t of stored_types) {
         if (!typesReq.includes(t.type)){
           // Create the function class
           try {
@@ -319,7 +321,7 @@ export class FunctionService {
             { new: true }
         );
 
-        function_types.push({code_file_id: code_file_id, type: function_type});
+        stored_types.push({code_file_id: code_file_id, type: function_type});
         lastCreated.createdAt = createdAt;
         lastCreated.updatedAt = updatedAt;
 
@@ -332,7 +334,7 @@ export class FunctionService {
     const responseBody = {
       id: id,
       version: version,
-      function_types: function_types,
+      function_types: stored_types,
       createdAt: lastCreated.createdAt,
       updatedAt: lastCreated.updatedAt,
       outputs: functionData.outputs
@@ -344,13 +346,12 @@ export class FunctionService {
   }
 
   async deleteFunction(id: string, owner: string, version?: string, type?: string): Promise<ResponseDeleteFunctionDto> {
-    //TODO: Test functionality multiple types && Update Swagger UI
     let totalDeletedCount = 0;
 
     // If version is defined, only that function version is deleted
     if (version && type) {
       // Get function data
-      const functionData = await this.functionModel.findOne({ id, version, type}).exec();
+      const functionData = await this.functionModel.findOne({ id, version, function_type:type}).exec();
       if (!functionData) {
         const msg = `A function with the id: ${id}, version: ${version}, type ${type} and owner: ${owner} doesn't exist.`;
         this.logger.error('deleteFunction: ' + msg);
@@ -389,7 +390,7 @@ export class FunctionService {
           await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionData.code_file_id) });
 
           // Delete function
-          const { deletedCount } = await this.functionModel.deleteOne({ id: functionData.id, version: functionData.version, owner });
+          const { deletedCount } = await this.functionModel.deleteOne({ _id: new Types.ObjectId(functionData._id),owner });
 
           totalDeletedCount += deletedCount;
 
@@ -428,20 +429,19 @@ export class FunctionService {
       }
     }
 
-    this.logger.debug('deleteFunction: deletedCount', totalDeletedCount);
+    this.logger.debug('deleteFunction: Deleted Count', totalDeletedCount);
     return {
       deletedCount: totalDeletedCount
     }
   }
 
   async getFunction(id: string, owner: string, version?: string, type?: string): Promise<ResponseFunctionDto> {
-    //TODO: Test functionality multiple types && Update Swagger UI
     let functionData = null;
 
     // If version and type are defined, we get that specific function
     if (version && type) {
       try {
-        let resp = await this.functionModel.findOne({ id, version, type, owner }).lean().exec();
+        let resp = await this.functionModel.findOne({ id, version, function_type: type, owner }).lean().exec();
         if (!resp) {
           throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
         }
@@ -464,7 +464,7 @@ export class FunctionService {
     else if (version) {
       try {
         let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
-        if (!resp) {
+        if (resp.length === 0) {
           throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
         }
 
@@ -545,13 +545,12 @@ export class FunctionService {
   }
 
   async findFunctions(offset: number, limit: number, id_partial?: string): Promise<ResponseFunctionListDto> {
-    //TODO: Function_types update
     try {
 
       // Get the functions (only the latest version of each function)
       let searchParameters:PipelineStage[]=[
         { $sort: { version: -1 } },
-        { $group: { _id: "$id", lastObject: { $first: "$$ROOT" } } },
+        { $group: { _id: {"id":"$id", "function_type": "$function_type"}, lastObject: { $first: "$$ROOT" } } },
         { $replaceRoot: { newRoot: "$lastObject" } }
       ];
 
@@ -573,13 +572,26 @@ export class FunctionService {
 
       const result = await this.functionModel.aggregate(searchParameters).exec();
 
-      const items = result.map(f => ({
+      //Get database result, group by id and concat types in array.
+      const tmpItems = result.map(f => ({
         id: f.id,
-        function_type: f.function_type,
+        function_types: [{type:f.function_type, code_file_id: f.code_file_id}],
         version: f.version,
         createdAt: f.createdAt,
-        updatedAt: f.updatedAt
+        updatedAt: f.updatedAt,
+        outputs: f.outputs
       }));
+
+      let groupItems: { [index: string]: any; } = {};
+      tmpItems.forEach(item => {
+        if(item.id in groupItems){
+          groupItems[item.id].function_types = groupItems[item.id].function_types.concat(item.function_types);
+        }else {
+          groupItems[item.id] = item;
+        }
+      });
+
+      const items = Object.keys(groupItems).map(key => groupItems[key]);
 
       // Count the total number of functions
       const totalCount = await this.functionModel.aggregate(countParameters);
@@ -596,4 +608,8 @@ export class FunctionService {
       throw new InternalServerErrorException(err);
     }
   }
+  //TODO: Implement function getFunctionTypes(id, version?)
+  //TODO: MongoBD cascade function on delete function delete code¿?
+  //TODO: CHeck error control (try -> throw -> catch -> throw new correctly)
+  //TODO: FindFunction type only if version sed?
 }

@@ -33,12 +33,11 @@ export class FunctionClassSpecificationDto implements FunctionClassSpecification
     outputs: string[];
 
     @ApiProperty({
-        example: '[ {"type": "RUST_WASM", "code_file_id": "652faf54465c2e7ec15facce"} ]',
+        example: [ {type: "RUST_WASM", code_file_id: "652faf54465c2e7ec15facce"} ],
         description: 'An array containing the type of function and the code file id linked to that function',
         required:true
     })
     @IsDefined()
     @IsNotEmpty()
     function_types: function_types[];
-
 }

@@ -1,14 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
-
-export interface function_types {
-    type: string;
-    code_file_id: string;
-}
+import {function_types} from "../../contract/function/class-specification.interface";
 
 export class UpdateFunctionDto  {
    @ApiProperty({
-        example: '[{type: "RUST_WASM", code_file_id: "652faf54465c2e7ec15facce"}]',
+        example: [{type: "RUST_WASM", code_file_id: "652faf54465c2e7ec15facce"}],
         description: 'The function types and code file id per type',
         required: true
     })

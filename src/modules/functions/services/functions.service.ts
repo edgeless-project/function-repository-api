@@ -168,8 +168,6 @@ export class FunctionService {
   }
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
-    //TODO: Test functionality multiple types.
-    //TODO: If func code in DB nothing, if not and code id  look for temp. Else if type not on body delete type.
 
     let stored_types:function_types[] = [];
     let lastCreated = {
@@ -179,9 +177,8 @@ export class FunctionService {
 
     //Get existing types for function
     let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
-    this.logger.debug(resp);
     if (!resp) {
-      throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
+      throw new Error(`updateFunction: A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
     }
     for (const f of resp) {
       stored_types.push({type:f.function_type, code_file_id: f.code_file_id});
@@ -226,6 +223,7 @@ export class FunctionService {
     }
 
     //Update existing files
+    stored_types = [];
     for (const function_type of functionData.function_types) {
 
       if (!function_type.code_file_id) {
@@ -248,14 +246,14 @@ export class FunctionService {
         functionPrev = await this.functionModel.findOne({
           id,
           version,
-          type,
+          function_type:type,
           owner
         }).exec();
         if (!functionPrev) {
           throw new Error("Function doesn't exist, please create a function first");
         }
-      } catch {
-        const msg = `updateFunction: A function with the id: ${id}, version: ${version}, type: ${type} and owner: ${owner} doesn't exist.`;
+      } catch{
+        const msg = `A function with the id: ${id}, version: ${version}, type: ${type} and owner: ${owner} doesn't exist.`;
         this.logger.error("updateFunction: " + msg);
         throw new NotAcceptableException(msg);
       }
@@ -294,7 +292,7 @@ export class FunctionService {
         try {
           await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionPrev.code_file_id) });
         } catch (err) {
-          this.logger.error('updateFunction: Server error', err);
+          this.logger.error('updateFunction: Server error on Delete.', err);
           throw new InternalServerErrorException('Server error');
         }
       }
@@ -311,7 +309,7 @@ export class FunctionService {
             {
               id,
               version,
-              type,
+              function_type:type,
               owner
             },
             { $set: {
@@ -326,7 +324,7 @@ export class FunctionService {
         lastCreated.updatedAt = updatedAt;
 
       } catch (err) {
-        this.logger.error('updateFunction: Server error', err);
+        this.logger.error('updateFunction: Server error on Update.', err);
         throw new InternalServerErrorException('Server error');
       }
     }
@@ -608,8 +606,5 @@ export class FunctionService {
       throw new InternalServerErrorException(err);
     }
   }
-  //TODO: Implement function getFunctionTypes(id, version?)
-  //TODO: MongoBD cascade function on delete function delete code¿?
-  //TODO: CHeck error control (try -> throw -> catch -> throw new correctly)
-  //TODO: FindFunction type only if version sed?
+  //TODO: Obtener workflow devolver class specification con typo
 }

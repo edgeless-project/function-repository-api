@@ -170,9 +170,13 @@ export class FunctionService {
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
 
     let stored_types:function_types[] = [];
-    let lastCreated = {
-      createdAt: Date.prototype,
-      updatedAt : Date.prototype,
+    let responseBody = {
+      id: id,
+      version: version,
+      function_types: functionData.function_types,
+      createdAt: null,
+      updatedAt: null,
+      outputs: functionData.outputs
     }
 
     //Get existing types for function
@@ -220,6 +224,13 @@ export class FunctionService {
           }
         }
       }
+    }
+
+    //Output check
+    if (!functionData.outputs) {
+      const msg = 'Output not provided';
+      this.logger.error('updateFunction: ' + msg);
+      throw new NotAcceptableException(msg);
     }
 
     //Update existing files
@@ -320,8 +331,9 @@ export class FunctionService {
         );
 
         stored_types.push({code_file_id: code_file_id, type: function_type});
-        lastCreated.createdAt = createdAt;
-        lastCreated.updatedAt = updatedAt;
+        responseBody.createdAt = createdAt;
+        responseBody.updatedAt = updatedAt;
+        responseBody.outputs = outputs;
 
       } catch (err) {
         this.logger.error('updateFunction: Server error on Update.', err);
@@ -329,15 +341,8 @@ export class FunctionService {
       }
     }
 
-    const responseBody = {
-      id: id,
-      version: version,
-      function_types: stored_types,
-      createdAt: lastCreated.createdAt,
-      updatedAt: lastCreated.updatedAt,
-      outputs: functionData.outputs
-    }
-
+    responseBody.id = id;
+    responseBody.function_types = stored_types;
     this.logger.debug('updateFunction: responseBody',responseBody);
     return responseBody;
 
@@ -461,7 +466,7 @@ export class FunctionService {
     // If version but not type is defined, we get that specific function
     else if (version) {
       try {
-        let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
+        const resp = await this.functionModel.find({ id, version, owner }).lean().exec();
         if (resp.length === 0) {
           throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
         }
@@ -485,12 +490,12 @@ export class FunctionService {
     // If not, we get the latest version
     else {
       try {
-        let lastVersion = await this.functionModel.findOne({ id, owner }).sort({ version: -1 }).lean().exec();
+        const lastVersion = await this.functionModel.findOne({ id, owner }).sort({ version: -1 }).lean().exec();
         if (!lastVersion) {
           throw new Error(`A function with the id: ${id} and owner:${owner} doesn't exist.`);
         }
 
-        let resp = await this.functionModel.find({ id:id, version: lastVersion.version , owner: owner }).lean().exec();
+        const resp = await this.functionModel.find({ id:id, version: lastVersion.version , owner: owner }).lean().exec();
         if (!resp) {
           throw new Error(`A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
         }

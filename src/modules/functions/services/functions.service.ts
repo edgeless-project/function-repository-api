@@ -1,6 +1,14 @@
-import { HttpException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotAcceptableException,
+  NotFoundException,
+  StreamableFile
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {Model, PipelineStage, Types} from 'mongoose';
+import {Model, mongo, connection, PipelineStage, Types} from 'mongoose';
 
 import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
 import { Function, FunctionDocument } from '../schemas/function.schema';
@@ -12,7 +20,8 @@ import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
-import {function_types} from "@modules/functions/model/contract/function/class-specification.interface";
+import { function_types } from "@modules/functions/model/contract/function/class-specification.interface";
+import * as fs from "node:fs";
 
 
 @Injectable()
@@ -134,6 +143,7 @@ export class FunctionService {
   async saveFunctionCode(file: Express.Multer.File): Promise<ResponseUploadFunctionCodeDto> {
 
     if (!file) {
+
       this.logger.error('createFunction: File not provided');
       throw new NotAcceptableException('File not provided');
     }
@@ -142,10 +152,19 @@ export class FunctionService {
 
     // Size validation (max 16MB)
     if(!file.size || file.size > 16777216) {
+      const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
+
+      const stream = new StreamableFile(file.buffer).getStream();
+      const res = stream.pipe(bucket.openUploadStream(file.originalname.toString(),{
+        chunkSizeBytes: 1048576,
+        metadata: { filename: file.originalname, mimetype: file.mimetype }
+      }));
+
       this.logger.error('createFunction: File size exceeds the limit (16MB)');
+      this.logger.debug('createFunction: ', res.id);
       throw new NotAcceptableException('File size exceeds the limit (16MB)');
     }
-
+    /*
     try {
       const { _id } = await this.functionTempCodeModel.create({
         mimetype: file.mimetype,
@@ -163,8 +182,11 @@ export class FunctionService {
     } catch (err) {
       this.logger.error('createFunction: Server error', err);
       throw new InternalServerErrorException('Server error');
-    }
-
+    }*/
+    const responseBody = {
+      id: "null"
+    };
+    return responseBody;
   }
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
@@ -522,13 +544,20 @@ export class FunctionService {
   }
 
   async getFunctionCode(id: string): Promise<any> {
-    const doc = await this.functionCodeModel.findOne({ _id: id }).lean();
+    /*const doc = await this.functionCodeModel.findOne({ _id: id }).lean();
     if (!doc) {
       const msg = `Not found function code with id: ${id}`;
       this.logger.error('getFunctionCode: ' + msg);
       throw new NotFoundException(msg);
-    }
-    return doc;
+    }*/
+    const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
+    const docStream = bucket.openDownloadStream(Types.ObjectId.createFromHexString("67177f99643e91dff84d0840")).pipe(fs.createWriteStream("./test.zip"));
+    let bufferArray = [];
+    docStream.on('data', (chunk) => {
+      bufferArray.push(chunk);
+    });
+
+    return Buffer.concat(bufferArray);
   }
 
   async getFunctionVersions(id: string, owner: string): Promise<ResponseFunctionVersionsDto> {

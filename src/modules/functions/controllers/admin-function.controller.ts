@@ -134,12 +134,12 @@ export class AdminFunctionController {
     const doc = await this.functionService.getFunctionCode(id);
 
     // Configure response to download
-    res.setHeader('Content-Disposition', `attachment; filename="${doc.originalname}"`);
+    /*res.setHeader('Content-Disposition', `attachment; filename="${doc.originalname}"`);
     res.setHeader('Content-Type', doc.mimetype);
 
     // Send data
-    const code = Buffer.from(doc.code.buffer, 'base64');
-    res.end(code);
+    const code = Buffer.from(doc.code.buffer, 'base64');*/
+    res.end(doc);
   }
 
   @Get('/:id/versions')

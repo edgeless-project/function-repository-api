@@ -22,6 +22,7 @@ import { ResponseFunctionVersionsDto } from '../model/dto/function/response-func
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
 import { function_types } from "@modules/functions/model/contract/function/class-specification.interface";
 import * as fs from "node:fs";
+import {MongoServerError, MongoServerSelectionError} from "mongodb";
 
 
 @Injectable()
@@ -142,50 +143,32 @@ export class FunctionService {
 
   async saveFunctionCode(file: Express.Multer.File): Promise<ResponseUploadFunctionCodeDto> {
 
-    if (!file) {
+    const responseBody = {
+      id: "null"
+    };
 
-      this.logger.error('createFunction: File not provided');
+    if (!file) {
+      this.logger.error('saveFunctionCode: File not provided');
       throw new NotAcceptableException('File not provided');
     }
 
     // TODO: Type validation
 
-    // Size validation (max 16MB)
-    if(!file.size || file.size > 16777216) {
+    try{
       const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
 
       const stream = new StreamableFile(file.buffer).getStream();
       const res = stream.pipe(bucket.openUploadStream(file.originalname.toString(),{
         chunkSizeBytes: 1048576,
-        metadata: { filename: file.originalname, mimetype: file.mimetype }
+        metadata: { filename: file.originalname, mimetype: file.mimetype, createdAt: new Date()}
       }));
 
-      this.logger.error('createFunction: File size exceeds the limit (16MB)');
-      this.logger.debug('createFunction: ', res.id);
-      throw new NotAcceptableException('File size exceeds the limit (16MB)');
+      responseBody.id = res.id.toString();
+    }catch (e) {
+      this.logger.error('saveFunctionCode: ', e);
+      throw new NotAcceptableException(e);
     }
-    /*
-    try {
-      const { _id } = await this.functionTempCodeModel.create({
-        mimetype: file.mimetype,
-        originalname: file.originalname,
-        code: file.buffer,
-        createdAt: new Date()
-      });
-
-      const responseBody = {
-        id: _id.toString()
-      };
-
-      this.logger.debug('createFunction: responseBody',responseBody);
-      return responseBody;
-    } catch (err) {
-      this.logger.error('createFunction: Server error', err);
-      throw new InternalServerErrorException('Server error');
-    }*/
-    const responseBody = {
-      id: "null"
-    };
+    this.logger.debug('saveFunctionCode: ', responseBody.id);
     return responseBody;
   }
 
@@ -544,20 +527,35 @@ export class FunctionService {
   }
 
   async getFunctionCode(id: string): Promise<any> {
-    /*const doc = await this.functionCodeModel.findOne({ _id: id }).lean();
-    if (!doc) {
-      const msg = `Not found function code with id: ${id}`;
-      this.logger.error('getFunctionCode: ' + msg);
-      throw new NotFoundException(msg);
-    }*/
-    const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
-    const docStream = bucket.openDownloadStream(Types.ObjectId.createFromHexString("67177f99643e91dff84d0840")).pipe(fs.createWriteStream("./test.zip"));
-    let bufferArray = [];
-    docStream.on('data', (chunk) => {
-      bufferArray.push(chunk);
-    });
 
-    return Buffer.concat(bufferArray);
+    const msg = `Not found function code with id: ${id}`;
+    let functionCode = new FunctionCode();
+    let bufferArray = [];
+    let bufferDoc: mongo.GridFSFile;
+
+    try {
+      const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
+      const docs = await bucket.find({_id: Types.ObjectId.createFromHexString(id)}).toArray();
+      const docStream = bucket.openDownloadStream(Types.ObjectId.createFromHexString(id));
+
+      docs.forEach((doc) => {
+        bufferDoc = doc;
+      });
+
+      await docStream.forEach((doc) => {
+        bufferArray.push(doc);
+      });
+
+    }catch (e){
+      this.logger.error('getFunctionCode: ' + e);
+      throw new NotFoundException(msg);
+    }
+
+    functionCode.mimetype = bufferDoc.metadata.mimetype;
+    functionCode.originalname = bufferDoc.filename;
+    functionCode.code = Buffer.concat(bufferArray);
+
+    return functionCode;
   }
 
   async getFunctionVersions(id: string, owner: string): Promise<ResponseFunctionVersionsDto> {

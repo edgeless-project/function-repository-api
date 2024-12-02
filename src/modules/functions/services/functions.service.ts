@@ -8,12 +8,12 @@ import {
   StreamableFile
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import {Model, mongo, connection, PipelineStage, Types} from 'mongoose';
+import { Model, mongo, PipelineStage, Types} from 'mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
 import { Function, FunctionDocument } from '../schemas/function.schema';
-import { FunctionCode, FunctionCodeDocument } from '../schemas/function-code.schema';
-import { FunctionTempCode, FunctionTempCodeDocument } from '../schemas/function-temp-code.schema';
+import { FunctionCode } from '../schemas/function-code.schema';
 import { ResponseFunctionDto } from '../model/dto/function/response-function.dto';
 import { ResponseUploadFunctionCodeDto } from '../model/dto/function/response-upload-function-code.dto';
 import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete-function.dto';
@@ -21,19 +21,40 @@ import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
 import { function_types } from "@modules/functions/model/contract/function/class-specification.interface";
-import * as fs from "node:fs";
-import {MongoServerError, MongoServerSelectionError} from "mongodb";
+import {ConfigService} from "@common/config/config.service";
+import moment from "moment";
 
 
 @Injectable()
 export class FunctionService {
   private logger = new Logger('FunctionService', { timestamp: true});
+  private documentBatchSize = 1048576; //Default Size in Bytes
+  //GridFS Connexions
+  private functionCodesMeta = this.functionModel.db.collection('functioncodes.files');
+  private bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"functioncodes"});
 
   constructor(
     @InjectModel(Function.name) private readonly functionModel: Model<FunctionDocument>,
-    @InjectModel(FunctionCode.name) private readonly functionCodeModel: Model<FunctionCodeDocument>,
-    @InjectModel(FunctionTempCode.name) private readonly functionTempCodeModel: Model<FunctionTempCodeDocument>,
-  ) {}
+    private readonly config: ConfigService
+  ) {
+    this.documentBatchSize = +config.get("DocumentFunctionBatchSize");
+  }
+
+  //Cron function executed every 2 hours to delete obsolete code files
+  @Cron(CronExpression.EVERY_2_HOURS)
+  async handleCronDeleteExpiredFiles() {
+
+    const docsToDelete = await this.bucket.find(
+        { "metadata.temp": true,
+          uploadDate: {$lt: moment().subtract(1,'days').toDate()} //Get date from one day past
+        }).toArray();
+    docsToDelete.forEach(doc => {
+      this.bucket.delete(doc._id);
+      this.logger.debug('Deleted document ' + doc._id);
+    });
+    this.logger.debug('Cron Job executed every 2 hours. Docs deleted '+ docsToDelete.length);
+
+  }
 
   async createFunction(functionData: FunctionClassSpecificationDto, owner: string): Promise<ResponseFunctionDto> {
 
@@ -68,37 +89,24 @@ export class FunctionService {
       if (!t.code_file_id) {
         this.logger.error('createFunction: code_file_id not provided');
         throw new NotAcceptableException('code_file_id not provided');
-      }
-      if (!t.type) {
+      }else if (!t.type) {
         this.logger.error('createFunction: type not provided');
         throw new NotAcceptableException('type not provided');
       }
 
       // Check if the code file exists in the temp collection and get it
-      let tempCodeFile = null;
       try {
-        tempCodeFile = await this.functionTempCodeModel.findById(t.code_file_id);
-        if (!tempCodeFile) throw new Error();
+        await this.functionCodesMeta.findOneAndUpdate({_id: Types.ObjectId.createFromHexString(t.code_file_id)},
+            {$set: {"metadata.temp": false}}
+        ).then((resp)=>{if(resp.lastErrorObject.n==0 || !resp.lastErrorObject.updatedExisting)
+          throw new Error("No function found")});
+
       } catch (err) {
-        const msg = "There isn't a function code with the provided code_file_id";
+        const msg = `There isn't a function code with the code_file_id ${t.code_file_id}`;
         this.logger.error("createFunction: " + msg);
         throw new NotAcceptableException(msg);
       }
 
-      // Copy the temp code file from the temp collection to the stable collection
-      try {
-        await this.functionCodeModel.create({
-          mimetype: tempCodeFile.mimetype,
-          originalname: tempCodeFile.originalname,
-          code: tempCodeFile.code,
-          _id: tempCodeFile._id
-        });
-
-        await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
-      } catch (err) {
-        this.logger.error('createFunction: Server error', err);
-        throw new InternalServerErrorException('Server error');
-      }
       // Create the function class
       try {
         const {
@@ -124,7 +132,7 @@ export class FunctionService {
         lastCreated.updatedAt = updatedAt;
 
       } catch (err) {
-        this.logger.error('createFunction: Server error', err);
+        this.logger.error('createFunction: Server error on create:', err);
         throw new InternalServerErrorException('Server error');
       }
     }
@@ -143,6 +151,7 @@ export class FunctionService {
 
   async saveFunctionCode(file: Express.Multer.File): Promise<ResponseUploadFunctionCodeDto> {
 
+
     const responseBody = {
       id: "null"
     };
@@ -155,12 +164,10 @@ export class FunctionService {
     // TODO: Type validation
 
     try{
-      const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
-
       const stream = new StreamableFile(file.buffer).getStream();
-      const res = stream.pipe(bucket.openUploadStream(file.originalname.toString(),{
-        chunkSizeBytes: 1048576,
-        metadata: { filename: file.originalname, mimetype: file.mimetype, createdAt: new Date()}
+      const res = stream.pipe(this.bucket.openUploadStream(file.originalname.toString(),{
+        chunkSizeBytes: this.documentBatchSize,
+        metadata: { temp: true, mimetype: file.mimetype}
       }));
 
       responseBody.id = res.id.toString();
@@ -278,35 +285,26 @@ export class FunctionService {
       const newFileCode = file_id !== functionPrev.code_file_id;
 
       if (newFileCode) {
-        // Check if the code file exists in the temp collection and get it
-        let tempCodeFile = null;
+
+        // Check if the code file exists with the temp parameter and update it
         try {
-          tempCodeFile = await this.functionTempCodeModel.findById(file_id);
-          if (!tempCodeFile) throw new Error();
+          await this.functionCodesMeta.findOneAndUpdate({
+                _id: Types.ObjectId.createFromHexString(file_id),
+                "metadata.temp": true},
+              {$set: {"metadata.temp": false}}
+          ).then((resp)=>{if(resp.lastErrorObject.n==0 || !resp.lastErrorObject.updatedExisting){
+            throw new Error("No function code found");
+          }});
+
         } catch (err) {
-          const msg = "There isn't a function code with the provided code_file_id";
-          this.logger.error("updateFunction: " + msg);
+          const msg = `There isn't a new function code with the code_file_id ${file_id}`;
+          this.logger.error("updateFunction: " + msg, err);
           throw new NotAcceptableException(msg);
         }
 
-        // Copy the temp code file from the temp collection to the stable collection
+        // Change temp state from document metadata
         try {
-          await this.functionCodeModel.create({
-            mimetype: tempCodeFile.mimetype,
-            originalname: tempCodeFile.originalname,
-            code: tempCodeFile.code,
-            _id: tempCodeFile._id
-          });
-
-          await this.functionTempCodeModel.deleteOne(tempCodeFile._id);
-        } catch (err) {
-          this.logger.error('updateFunction: Server error', err);
-          throw new InternalServerErrorException('Server error');
-        }
-
-        // Delete the old code file from the stable collection
-        try {
-          await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionPrev.code_file_id) });
+          await this.bucket.delete(Types.ObjectId.createFromHexString(functionPrev.code_file_id));//Throws exception if no document found
         } catch (err) {
           this.logger.error('updateFunction: Server error on Delete.', err);
           throw new InternalServerErrorException('Server error');
@@ -369,7 +367,7 @@ export class FunctionService {
       try {
 
         // Delete function code
-        await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionData.code_file_id) });
+        await this.bucket.delete(new Types.ObjectId(functionData.code_file_id));
 
         // Delete function
         const { deletedCount } = await this.functionModel.deleteOne({ _id: new Types.ObjectId(functionData._id), owner});
@@ -395,7 +393,7 @@ export class FunctionService {
           const functionData = functionsData[i];
 
           // Delete function code
-          await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionData.code_file_id) });
+          await this.bucket.delete(new Types.ObjectId(functionData.code_file_id));
 
           // Delete function
           const { deletedCount } = await this.functionModel.deleteOne({ _id: new Types.ObjectId(functionData._id),owner });
@@ -423,7 +421,7 @@ export class FunctionService {
           const functionData = functionsData[i];
 
           // Delete function code
-          await this.functionCodeModel.deleteOne({ _id: new Types.ObjectId(functionData.code_file_id) });
+          await this.bucket.delete(new Types.ObjectId(functionData.code_file_id));
 
           // Delete function
           const { deletedCount } = await this.functionModel.deleteOne({ id: functionData.id, owner });
@@ -534,9 +532,8 @@ export class FunctionService {
     let bufferDoc: mongo.GridFSFile;
 
     try {
-      const bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"documents"});
-      const docs = await bucket.find({_id: Types.ObjectId.createFromHexString(id)}).toArray();
-      const docStream = bucket.openDownloadStream(Types.ObjectId.createFromHexString(id));
+      const docs = await this.bucket.find({_id: Types.ObjectId.createFromHexString(id)}).toArray();
+      const docStream = this.bucket.openDownloadStream(Types.ObjectId.createFromHexString(id));
 
       docs.forEach((doc) => {
         bufferDoc = doc;
@@ -638,5 +635,4 @@ export class FunctionService {
       throw new InternalServerErrorException(err);
     }
   }
-  //TODO: Obtener workflow devolver class specification con typo
 }

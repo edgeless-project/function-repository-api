@@ -576,26 +576,30 @@ export class FunctionService {
 
       // Get the functions (only the latest version of each function)
       let searchParameters:PipelineStage[]=[
-        { $sort: { version: -1 } },
-        { $group: { _id: {"id":"$id", "function_type": "$function_type"}, lastObject: { $first: "$$ROOT" } } },
+        { $group: { _id: { "id":"$id", "function_type": "$function_type"}, lastObject: { $first: "$$ROOT" } } },
+        { $sort: { id: -1, version: -1, _id: -1 } },
         { $replaceRoot: { newRoot: "$lastObject" } }
       ];
 
       let countParameters:PipelineStage[]=[
-        { $group: { _id: "$id" } }
+        { $group: { _id: "$id" } },
+        { $sort: { id: 1, _id: 1 }}
       ];
 
       if (typeof id_partial !== 'undefined'){
         //In case of partial id set, set match parameter using regex
         searchParameters.push({ $match: { "id": { "$regex": id_partial, "$options": "i" } }});
         countParameters.push({ $match: { "_id": { "$regex": id_partial, "$options": "i" } }});
+      } else {
+        //Get distinct ids following limit and adds as filter
+        const withinLim = countParameters.concat(
+            { $skip: offset },
+            { $limit: limit });
+
+        const result_withinLim = await this.functionModel.aggregate(withinLim).exec();
+        const parametersFinal = result_withinLim.map(f => (f._id));
+        searchParameters.push({ $match: { "id": { "$in": parametersFinal} } })
       }
-
-      searchParameters.push(
-          { $skip: offset },
-          { $limit: limit });
-
-      countParameters.push({ $count: "total" });
 
       const result = await this.functionModel.aggregate(searchParameters).exec();
 
@@ -621,6 +625,7 @@ export class FunctionService {
       const items = Object.keys(groupItems).map(key => groupItems[key]);
 
       // Count the total number of functions
+      countParameters.push({ $count: "total" });
       const totalCount = await this.functionModel.aggregate(countParameters);
       let total = totalCount.length > 0 ? totalCount[0].total : 0;
 

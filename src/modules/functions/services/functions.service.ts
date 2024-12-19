@@ -181,7 +181,7 @@ export class FunctionService {
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
 
-    let stored_types:function_types[] = [];
+    let update_types:function_types[] = [];
     let responseBody = {
       id: id,
       version: version,
@@ -191,53 +191,6 @@ export class FunctionService {
       outputs: functionData.outputs
     }
 
-    //Get existing types for function
-    let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
-    if (!resp) {
-      throw new Error(`updateFunction: A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
-    }
-    for (const f of resp) {
-      stored_types.push({type:f.function_type, code_file_id: f.code_file_id});
-    }
-
-    // Delete expired function types that are on db but not on update request
-    if (stored_types.length > functionData.function_types.length) {
-      let typesReq = [];
-      functionData.function_types.forEach(t => {typesReq.push(t.type)});
-      stored_types.forEach(t => {
-        if (!typesReq.includes(t.type)){
-          this.deleteFunction(id, owner, version, t.type);
-        }
-      });
-    }
-
-    //  Create new function types
-    else if (stored_types.length < functionData.function_types.length) {
-      let typesReq = [];
-      functionData.function_types.forEach(t => {typesReq.push(t.type)});
-      for (const t of stored_types) {
-        if (!typesReq.includes(t.type)){
-          // Create the function class
-          try {
-            const {
-              _id
-            } = await this.functionModel.create({
-              owner:owner,
-              id: id,
-              version: version,
-              code_file_id: t.code_file_id,
-              function_type: t.type,
-              outputs: functionData.outputs,
-            });
-
-          } catch (err) {
-            this.logger.error('updateFunction: Server error on create function', err);
-            throw new InternalServerErrorException('Server error');
-          }
-        }
-      }
-    }
-
     //Output check
     if (!functionData.outputs) {
       const msg = 'Output not provided';
@@ -245,110 +198,153 @@ export class FunctionService {
       throw new NotAcceptableException(msg);
     }
 
-    //Update existing files
-    stored_types = [];
-    for (const function_type of functionData.function_types) {
+    //Get existing types for function
+    let resp = await this.functionModel.find({ id, version, owner }).lean().exec();
+    if (!resp) {
+      throw new Error(`updateFunction: A function with the id: ${id}, version: ${version} and owner: ${owner} doesn't exist.`);
+    }
 
-      if (!function_type.code_file_id) {
-        const msg = 'code_file_id not provided';
-        this.logger.error('updateFunction: ' + msg);
-        throw new NotAcceptableException(msg);
-      }
-      if (!function_type.type) {
-        const msg = 'type not provided';
-        this.logger.error('updateFunction: ' + msg);
-        throw new NotAcceptableException(msg);
-      }
+    for (const f of resp) {
+      const funToUpdate = functionData.function_types.find(value => value.type === f.function_type);
 
-      const type = function_type.type;
-      const file_id = function_type.code_file_id;
+      if(funToUpdate && funToUpdate.code_file_id === f.code_file_id){
+        update_types.push({type:f.function_type, code_file_id: f.code_file_id});
+      }else if (funToUpdate) {
 
-      // Check if the function exists with that id and version
-      let functionPrev = null;
-      try {
-        functionPrev = await this.functionModel.findOne({
-          id,
-          version,
-          function_type:type,
-          owner
-        }).exec();
-        if (!functionPrev) {
-          throw new Error("Function doesn't exist, please create a function first");
+        if (!funToUpdate.code_file_id) {
+          const msg = 'code_file_id not provided';
+          this.logger.error('updateFunction: ' + msg);
+          throw new NotAcceptableException(msg);
         }
-      } catch{
-        const msg = `A function with the id: ${id}, version: ${version}, type: ${type} and owner: ${owner} doesn't exist.`;
-        this.logger.error("updateFunction: " + msg);
-        throw new NotAcceptableException(msg);
-      }
-
-      // Check if the code file is new
-      const newFileCode = file_id !== functionPrev.code_file_id;
-
-      if (newFileCode) {
+        if (!funToUpdate.type) {
+          const msg = 'type not provided';
+          this.logger.error('updateFunction: ' + msg);
+          throw new NotAcceptableException(msg);
+        }
 
         // Check if the code file exists with the temp parameter and update it
         try {
           await this.functionCodesMeta.findOneAndUpdate({
-                _id: Types.ObjectId.createFromHexString(file_id),
-                "metadata.temp": true},
+                _id: Types.ObjectId.createFromHexString(funToUpdate.code_file_id),
+                "metadata.temp": true
+              },
               {$set: {"metadata.temp": false}}
-          ).then((resp)=>{if(resp.lastErrorObject.n==0 || !resp.lastErrorObject.updatedExisting){
-            throw new Error("No function code found");
-          }});
+          ).then((resp) => {
+            if (resp.lastErrorObject.n == 0 || !resp.lastErrorObject.updatedExisting) {
+              throw new Error("No function code found");
+            }
+          });
 
         } catch (err) {
-          const msg = `There isn't a new function code with the code_file_id ${file_id}`;
-          this.logger.error("updateFunction: " + msg, err);
+          const msg = `There isn't a new function code with the code_file_id ${funToUpdate.code_file_id}`;
+          this.logger.error("updateFunction: On Update Function." + msg, err);
           throw new NotAcceptableException(msg);
         }
 
-        // Change temp state from document metadata
+        // Delete old document from bucket
         try {
-          await this.bucket.delete(Types.ObjectId.createFromHexString(functionPrev.code_file_id));//Throws exception if no document found
+          await this.bucket.delete(Types.ObjectId.createFromHexString(f.code_file_id));//Throws exception if no document found
         } catch (err) {
           this.logger.error('updateFunction: Server error on Delete.', err);
           throw new InternalServerErrorException('Server error');
         }
+
+        // Update the function class
+        try {
+          const {
+            function_type,
+            code_file_id,
+            outputs,
+            createdAt,
+            updatedAt
+          } = await this.functionModel.findOneAndUpdate(
+              {
+                id,
+                version,
+                function_type: f.function_type,
+                owner
+              },
+              {
+                $set: {
+                  code_file_id: funToUpdate.code_file_id,
+                  outputs: functionData.outputs
+                }
+              },
+              {new: true}
+          );
+
+          update_types.push({code_file_id: code_file_id, type: function_type});
+          responseBody.createdAt = createdAt;
+          responseBody.updatedAt = updatedAt;
+          responseBody.outputs = outputs;
+
+        } catch (err) {
+          this.logger.error('updateFunction: Server error on Update.', err);
+          throw new InternalServerErrorException('Server error');
+        }
+
+      }else {
+        // Delete expired function types that are on db but not on update request
+        await this.deleteFunction(id, owner, version, f.function_type);
       }
+    }
 
-      // Update the function class
-      try {
-        const {
-          function_type,
-          code_file_id,
-          outputs,
-          createdAt,
-          updatedAt
-        } = await this.functionModel.findOneAndUpdate(
-            {
-              id,
-              version,
-              function_type:type,
-              owner
-            },
-            { $set: {
-                code_file_id: file_id,
-                outputs: functionData.outputs
-              } },
-            { new: true }
-        );
+    //  Create new function types
+    for (const t of functionData.function_types) {
+      if (update_types.find(v=> v.type === t.type) == undefined) {
 
-        stored_types.push({code_file_id: code_file_id, type: function_type});
-        responseBody.createdAt = createdAt;
-        responseBody.updatedAt = updatedAt;
-        responseBody.outputs = outputs;
+        // Check if the code file exists with the temp parameter and update it
+        try {
+          await this.functionCodesMeta.findOneAndUpdate({
+                _id: Types.ObjectId.createFromHexString(t.code_file_id),
+                "metadata.temp": true
+              },
+              {$set: {"metadata.temp": false}}
+          ).then((resp) => {
+            if (resp.lastErrorObject.n == 0 || !resp.lastErrorObject.updatedExisting) {
+              throw new Error("No function code found");
+            }
+          });
 
-      } catch (err) {
-        this.logger.error('updateFunction: Server error on Update.', err);
-        throw new InternalServerErrorException('Server error');
+        } catch (err) {
+          const msg = `There isn't a new function code with the code_file_id ${t.code_file_id}`;
+          this.logger.error("updateFunction: On Create Function." + msg, err);
+          throw new NotAcceptableException(msg);
+        }
+
+        // Create the function class
+        try {
+          const {
+            function_type,
+            code_file_id,
+            outputs,
+            createdAt,
+            updatedAt
+          } = await this.functionModel.create({
+            owner:owner,
+            id: id,
+            version: version,
+            code_file_id: t.code_file_id,
+            function_type: t.type,
+            outputs: functionData.outputs,
+          });
+
+          update_types.push({code_file_id: code_file_id, type: function_type});
+          responseBody.createdAt = createdAt;
+          responseBody.updatedAt = updatedAt;
+          responseBody.outputs = outputs;
+
+        } catch (err) {
+          this.logger.error('updateFunction: Server error on create function', err);
+          throw new InternalServerErrorException('Server error');
+        }
       }
     }
 
     responseBody.id = id;
-    responseBody.function_types = stored_types;
+    responseBody.function_types = update_types;
     this.logger.debug('updateFunction: responseBody',responseBody);
     return responseBody;
-
   }
 
   async deleteFunction(id: string, owner: string, version?: string, type?: string): Promise<ResponseDeleteFunctionDto> {

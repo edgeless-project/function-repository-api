@@ -1,27 +1,33 @@
-import {Injectable, InternalServerErrorException, Logger, NotAcceptableException} from '@nestjs/common';
+import {
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+	NotAcceptableException,
+	NotFoundException
+} from '@nestjs/common';
 import {CreateUserDto} from "@common/users/model/dto/create-user.dto";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model} from "mongoose";
 import {User, UserDocument} from "@common/users/schemas/user.schema";
 import {UserDTO} from "@common/users/model/dto/user.dto";
+import {ValidateUserDto} from "@common/users/model/dto/validate-user.dto";
 
 @Injectable()
 export class UsersService {
-	private logger = new Logger('UsersService', { timestamp: true});
+	private logger = new Logger('UsersService', { timestamp: true });
 
 	constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
-	async createUser(userData: CreateUserDto, owner: string) {
+	async createUser(userData: CreateUserDto) {
 
 		// Check if there exists already a user with that username
 		try {
 			const resp = await this.userModel.exists({
-				username: userData.username,
-				owner
+				username: userData.username
 			});
 			if (resp) throw new Error('User already exists');
 		} catch {
-			const msg = `A user with the name: ${userData.username} and owner: ${owner} already exists.`
+			const msg = `A user with the name: ${userData.username} already exists.`
 			this.logger.error('createUser: ' + msg);
 			throw new NotAcceptableException(msg);
 		}
@@ -58,53 +64,50 @@ export class UsersService {
 		}
 	}
 
-	async findUserByEmail(email: string, owner: string) {
+	async findUserByEmail(email: string) {
 		let user:User;
 		try {
 			user = await this.userModel.findOne({
-				email: email,
-				owner
+				email: email
 			}).exec();
 		} catch {
-			const msg = `Error on looking for email: ${email} and owner: ${owner}.`
+			const msg = `Error on looking for email: ${email}.`
 			this.logger.error('findUserByEmail: ' + msg);
 			throw new NotAcceptableException(msg);
 		}
 		return user?user:null;
 	}
 
-	async findUserByUsername(username: string, owner: string) {
+	async findUserByUsername(username: string) {
 		let user:User;
 		try {
 			user = await this.userModel.findOne({
-				username: username,
-				owner
+				username: username
 			}).exec();
 		} catch {
-			const msg = `Error on looking for email: ${username} and owner: ${owner}.`
-			this.logger.error('findUserByEmail: ' + msg);
+			const msg = `Error on looking for email: ${username}.`
+			this.logger.error('findUserByUsername: ' + msg);
 			throw new NotAcceptableException(msg);
 		}
 		return user?user:null;
 	}
 
-	async updateUser(userData: UserDTO, username:string, owner: string) {
+	async updateUser(userData: UserDTO, username:string) {
 		let userId = null;
 		// Check if there exists already a user with that username
 		try {
 			const resp = await this.userModel.exists({
-				username: username,
-				owner
+				username: username
 			}).exec();
 			if (resp) userId = resp
 			else throw new Error('User does not exist');
 		} catch {
-			const msg = `A user with the name: ${userData.username} and owner: ${owner} does not exist.`
+			const msg = `A user with the name: ${userData.username} does not exist.`
 			this.logger.error('updateUser: ' + msg);
 			throw new NotAcceptableException(msg);
 		}
 		try {
-			const responseBody:User = await this.userModel.findOneAndUpdate({_id: userId, owner: owner}, {
+			const responseBody:User = await this.userModel.findOneAndUpdate({_id: userId}, {
 				$set: {
 					username: userData.username,
 					email: userData.email,
@@ -115,9 +118,36 @@ export class UsersService {
 			}).exec();
 			return responseBody;
 		}catch (e) {
-			const msg = `A user with the name: ${userData.username} and owner: ${owner} could not be updated.`
+			const msg = `A user with the name: ${userData.username} could not be updated.`
 			this.logger.error('updateUser: ' + msg);
 			throw new NotAcceptableException(msg);
 		}
 	}
+
+	async validateUser(userData: ValidateUserDto, username: string) {
+		let responseBody = {
+			username: username,
+			validation: false
+		}
+		try {
+			let user = await this.findUserByUsername(username);
+			if (!user) user = await this.findUserByEmail(username);
+			if (!user) {
+				this.logger.debug(`validateUser: User ${username} was not found.`);
+				return responseBody;
+			}
+
+			if (user.password === userData.password) {
+				responseBody.validation = true;
+			}
+			this.logger.debug(`validateUser: User ${username} has${responseBody.validation?'':' not'} been validated.`);
+			return responseBody;
+
+		}catch (e) {
+			const msg = `A user with the name: ${username} could not be found for an error server.`
+			this.logger.error('validateUser: ' + msg);
+			throw new NotAcceptableException(msg);
+		}
+	}
+
 }

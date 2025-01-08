@@ -8,7 +8,7 @@ export class UserDTO implements User {
 	@ApiProperty({
 		example: 'user',
 		description: 'The User name',
-		type: [String],
+		type: String,
 		required: true
 	})
 	@IsDefined()
@@ -18,7 +18,7 @@ export class UserDTO implements User {
 	@ApiProperty({
 		example: 'email@email.com',
 		description: 'The User email',
-		type: [String],
+		type: String,
 		required: false
 	})
 	@IsDefined()
@@ -27,7 +27,7 @@ export class UserDTO implements User {
 	@ApiProperty({
 		example: 'password',
 		description: 'The User password',
-		type: [String],
+		type: String,
 		required: true
 	})
 	@IsDefined()

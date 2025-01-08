@@ -1,16 +1,10 @@
 import { AuthModule } from '@common/auth/auth.module';
 import { ConfigModule } from '@common/config/config.module';
-import { MongooseModule } from '@nestjs/mongoose';
-
-<<<<<<< Updated upstream
-import { DatabaseModule } from './common/database/database.module';
-=======
 import { UsersModule } from '@common/users/users.module';
 import { DatabaseModule } from '@common/database/database.module';
->>>>>>> Stashed changes
 import { ConfigService } from '@common/config/config.service';
 import { Module } from '@nestjs/common';
-import { FunctionModule } from './modules/functions/functions.module';
+import { FunctionModule } from '@modules/functions/functions.module';
 import { WorkflowsModule } from '@modules/workflows/workflows.module';
 
 @Module({

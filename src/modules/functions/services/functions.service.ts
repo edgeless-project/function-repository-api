@@ -20,7 +20,7 @@ import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete
 import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
 import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
 import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
-import { function_types } from "@modules/functions/model/contract/function/class-specification.interface";
+import { FunctionType } from "@modules/functions/model/contract/function/class-specification.interface";
 import {ConfigService} from "@common/config/config.service";
 import moment from "moment";
 
@@ -37,7 +37,7 @@ export class FunctionService {
     @InjectModel(Function.name) private readonly functionModel: Model<FunctionDocument>,
     private readonly config: ConfigService
   ) {
-    this.documentBatchSize = +config.get("DocumentFunctionBatchSize");
+    this.documentBatchSize = +config.get("DOCUMENT_FUNCTION_BATCH_SIZE");
   }
 
   //Cron function executed every 2 hours to delete obsolete code files
@@ -63,7 +63,7 @@ export class FunctionService {
       throw new NotAcceptableException('Function types not provided');
     }
 
-    let function_types:function_types[] = [];
+    let function_types:FunctionType[] = [];
     let lastCreated = {
       createdAt: Date.prototype,
       updatedAt : Date.prototype,
@@ -181,10 +181,10 @@ export class FunctionService {
 
   async updateFunction(id: string, version: string, functionData: UpdateFunctionDto, owner: string): Promise<ResponseFunctionDto> {
 
-    let update_types:function_types[] = [];
+    let update_types:FunctionType[] = [];
     let responseBody = {
-      id: id,
-      version: version,
+      id,
+      version,
       function_types: functionData.function_types,
       createdAt: null,
       updatedAt: null,

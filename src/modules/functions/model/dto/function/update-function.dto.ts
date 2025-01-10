@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
-import {function_types} from "../../contract/function/class-specification.interface";
+import {FunctionType} from "../../contract/function/class-specification.interface";
 
 export class UpdateFunctionDto  {
    @ApiProperty({
@@ -10,7 +10,7 @@ export class UpdateFunctionDto  {
     })
     @IsDefined()
     @IsNotEmpty()
-    function_types: function_types[];
+    function_types: FunctionType[];
 
     @ApiProperty({
         example: '["success_cb", "failure_cb"]',

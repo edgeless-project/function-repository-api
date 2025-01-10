@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
 
-import {function_types, FunctionClassSpecification} from "../../contract/function/class-specification.interface";
+import {FunctionType, FunctionClassSpecification} from "../../contract/function/class-specification.interface";
 
 export class FunctionClassSpecificationDto implements FunctionClassSpecification {
 
@@ -39,5 +39,5 @@ export class FunctionClassSpecificationDto implements FunctionClassSpecification
     })
     @IsDefined()
     @IsNotEmpty()
-    function_types: function_types[];
+    function_types: FunctionType[];
 }

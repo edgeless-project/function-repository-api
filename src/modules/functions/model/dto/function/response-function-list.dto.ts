@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import {FunctionClassSpecificationDto} from "@modules/functions/model/dto/function/class-specification.dto";
 
 class BasicFunctionDto {
     @ApiProperty({
@@ -39,7 +40,7 @@ class BasicFunctionDto {
 
 export class ResponseFunctionListDto {
     @ApiProperty({ required: true })
-    items: BasicFunctionDto[];
+    items: FunctionClassSpecificationDto[];
     @ApiProperty({ required: true })
     total: number;
     @ApiProperty({ required: true })

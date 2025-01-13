@@ -35,4 +35,4 @@ export class Function {
 
 export const FunctionSchema = SchemaFactory.createForClass(Function);
 
-FunctionSchema.index({ id: 1, version: 1, owner: 1 }, { unique: true });
+FunctionSchema.index({ id: 1, version: 1, function_type: 1, owner: 1 }, { unique: true });

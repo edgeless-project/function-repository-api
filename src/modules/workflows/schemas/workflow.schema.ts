@@ -1,6 +1,7 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Type } from 'class-transformer';
+import {string} from "joi";
 
 export type WorkflowDocument = Workflow & mongoose.Document;
 
@@ -9,10 +10,16 @@ class WorkflowFunction {
   name: string;
 
   @Prop({
-    type: mongoose.Types.ObjectId,
+    type: String,
     ref: 'Function'
   })
-  class_specification: mongoose.Types.ObjectId;
+  class_specification_id: string;
+
+  @Prop({
+    type: String,
+    ref: 'Function'
+  })
+  class_specification_version: string;
 
   @Prop({
     type: mongoose.Schema.Types.Mixed,

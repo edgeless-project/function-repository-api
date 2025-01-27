@@ -1,10 +1,11 @@
-import { ApiProperty } from "@nestjs/swagger";
+import {ApiProperty, getSchemaPath} from "@nestjs/swagger";
 import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
 
 import { Workflow } from "../contract/workflow.interface";
 import { FunctionDto } from "./function.dto";
 import { AnnotationDto } from "./annotation.dto";
 import { ResourceDto } from "./resource.dto";
+import {FunctionSimpleDto} from "@modules/workflows/model/dto/function-simple.dto";
 
 export class WorkflowDto implements Workflow {
 
@@ -19,12 +20,16 @@ export class WorkflowDto implements Workflow {
 
     @ApiProperty({
         description: 'The workflow functions',
-        type: [FunctionDto],
+        isArray: true,
+        oneOf:[
+            {type: getSchemaPath(FunctionDto)},
+            {type: getSchemaPath(FunctionSimpleDto)}
+        ],
         required: true
     })
     @IsDefined()
     @IsNotEmpty()
-    functions: FunctionDto[];
+    functions: any[];
 
     @ApiProperty({
         description: 'The workflow resources',

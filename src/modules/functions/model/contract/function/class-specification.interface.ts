@@ -1,7 +1,11 @@
+export interface FunctionType {
+    type: string;
+    code_file_id: string;
+}
+
 export interface FunctionClassSpecification {
     id?: string;
-    function_type: string;
+    function_types: FunctionType[];
     version: string;
-    code_file_id: string;
     outputs: string[];
 }

@@ -1,13 +1,14 @@
 import { HttpException, Injectable, InternalServerErrorException, Logger, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 
-import { ConfigService } from '../../../common/config/config.service';
 import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
 import { Workflow, WorkflowDocument } from '../schemas/workflow.schema';
 import { Function, FunctionDocument } from '@modules/functions/schemas/function.schema';
 import { WorkflowDto } from '../model/dto/workflow.dto';
 import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
+import {FunctionService} from "@modules/functions/services/functions.service";
+import {ResponseWorkflowDto} from "@modules/workflows/model/dto/response-workflow.dto";
 
 
 @Injectable()
@@ -54,14 +55,14 @@ export class WorkflowsService {
         this.logger.error('createWorkflow: ', msg);
         throw new NotFoundException(msg);
       }
-      functions[i]._id = functionData._id;
       
     }
 
     try {
       const functionsToCreate = functions.map(func => ({
         name: func.name,
-        class_specification: func._id,
+        class_specification_id: func.class_specification_id,
+        class_specification_version: func.class_specification_version,
         output_mapping: func.output_mapping,
         annotations: func.annotations
       }));
@@ -132,14 +133,14 @@ export class WorkflowsService {
         this.logger.error('createWorkflow: ', msg);
         throw new NotFoundException(msg);
       }
-      functions[i]._id = functionData._id;
       
     }
 
     try {
       const functionsToUpdate = functions.map(func => ({
         name: func.name,
-        class_specification: func._id,
+        class_specification_id: func.class_specification_id,
+        class_specification_version: func.class_specification_version,
         output_mapping: func.output_mapping,
         annotations: func.annotations
       }));
@@ -190,7 +191,7 @@ export class WorkflowsService {
     }
   }
 
-  async getWorkflow(name: string, excludeClassSpecification: boolean, owner: string) {
+  async getWorkflow(name: string, excludeClassSpecification: boolean, owner: string): Promise<ResponseWorkflowDto> {
     try {
       const workflowData = await this.workflowModel.findOne({ name, owner });
 
@@ -201,30 +202,38 @@ export class WorkflowsService {
       let functions = [];
       for (let i = 0; i < workflowData.functions.length; i++) {
         const func = workflowData.functions[i];
-        const {
-          function_type, 
-          id, 
-          version, 
-          code_file_id, 
-          outputs 
-        } = await this.functionModel.findOne({ _id: func.class_specification });
         if (excludeClassSpecification) {
           functions.push({
             name: func.name,
-            class_specification_id: id,
-            class_specification_version: version,
+            class_specification_id: func.class_specification_id,
+            class_specification_version: func.class_specification_version,
             output_mapping: func.output_mapping,
             annotations: func.annotations
           });
         } else {
+          const resp = await this.functionModel.find({ id:func.class_specification_id, version:func.class_specification_version, owner }).lean().exec();
+          if (resp.length === 0) {
+            throw new Error(`A function with the id: ${func.class_specification_id}, version: ${func.class_specification_version} and owner: ${owner} doesn't exist.`);
+          }
+
+          let functionData = {
+            id: func.class_specification_id,
+            version: resp[0].version,
+            outputs: resp[0].outputs,
+            function_types:[]
+          };
+
+          for (const f of resp) {
+            functionData.function_types.push({type:f.function_type, code_file_id: f.code_file_id});
+          }
+
           functions.push({
             name: func.name,
             class_specification: {
-              function_type, 
-              id, 
-              version, 
-              code_file_id, 
-              outputs 
+              id: functionData.id,
+              version: functionData.version,
+              function_types: functionData.function_types,
+              outputs: functionData.outputs,
             },
             output_mapping: func.output_mapping,
             annotations: func.annotations
@@ -242,7 +251,7 @@ export class WorkflowsService {
         updatedAt: workflowData.updatedAt
       }
 
-      this.logger.debug('createWorkflow: responseBody',responseBody);
+      this.logger.debug('getWorkflow: responseBody',responseBody);
       return responseBody;
       
     } catch (err) {

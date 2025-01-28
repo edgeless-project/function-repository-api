@@ -5,6 +5,7 @@ import { DatabaseModule } from '@common/database/database.module';
 import { ConfigService } from '@common/config/config.service';
 import { Module } from '@nestjs/common';
 import { FunctionModule } from '@modules/functions/functions.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { WorkflowsModule } from '@modules/workflows/workflows.module';
 
 @Module({
@@ -14,7 +15,8 @@ import { WorkflowsModule } from '@modules/workflows/workflows.module';
     UsersModule,
     FunctionModule,
     WorkflowsModule,
-    DatabaseModule
+    DatabaseModule,
+    ScheduleModule.forRoot()
   ],
 })
 export class AppModule {

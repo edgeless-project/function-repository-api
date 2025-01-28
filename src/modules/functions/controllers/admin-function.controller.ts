@@ -54,7 +54,9 @@ export class AdminFunctionController {
   @Delete('/:id')
   @ApiOperation({
     summary: '',
-    description: 'This service deletes an existing function by its id. If the version is defined, it deletes the function with that version, if not it deletes all the existing versions of that function.'
+    description: "This service deletes an existing function by its id. If the version is defined, " +
+        "it deletes the function with that version, if not it deletes all the existing versions of that function. " +
+        "It has the same functionality for type field."
   })
   @ApiOkResponse({ type: ResponseDeleteFunctionDto})
   @ApiQuery({
@@ -62,11 +64,17 @@ export class AdminFunctionController {
     required: false,
     type: String,
   })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    type: String,
+  })
   async deleteFunction(
     @Param('id') id: string,
-    @Query('version') version: string = null
+    @Query('version') version: string = null,
+    @Query('type') type: string = null
   ) {
-    return this.functionService.deleteFunction(id, 'admin', version);
+    return this.functionService.deleteFunction(id, 'admin', version, type);
   }
 
   @Get('/:id')
@@ -80,11 +88,18 @@ export class AdminFunctionController {
     required: false,
     type: String,
   })
+  @ApiOkResponse({ type: FunctionClassSpecificationDto})
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    type: String,
+  })
   async getFunction(
     @Param('id') id: string,
-    @Query('version') version: string = null
+    @Query('version') version: string = null,
+    @Query('type') type: string = null
   ) {
-    return this.functionService.getFunction(id, 'admin', version);
+    return this.functionService.getFunction(id, 'admin', version, type);
   }
 
   @Post('/upload')

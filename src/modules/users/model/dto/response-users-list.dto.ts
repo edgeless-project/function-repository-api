@@ -1,4 +1,4 @@
-import {UserDTO} from "@common/users/model/dto/user.dto";
+import {UserDTO} from "@modules/users/model/dto/user.dto";
 import {ApiProperty} from "@nestjs/swagger";
 import {IsDefined, IsNotEmpty} from "class-validator";
 import {number} from "joi";

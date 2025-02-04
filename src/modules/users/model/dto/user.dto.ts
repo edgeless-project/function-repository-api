@@ -1,7 +1,7 @@
 
 import {ApiProperty} from "@nestjs/swagger";
 import {IsDefined, IsNotEmpty} from "class-validator";
-import {User, UserRole} from "@common/users/model/contract/user.interface";
+import {User, UserRole} from "@modules/users/model/contract/user.interface";
 
 
 export class UserDTO implements User {

@@ -2,14 +2,14 @@ import {HttpException, HttpStatus, Injectable, Logger} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import {InjectModel} from "@nestjs/mongoose";
 import {Model} from "mongoose";
-import {User, UserDocument} from "@common/users/schemas/user.schema";
-import {UserDTO} from "@common/users/model/dto/user.dto";
-import {ValidateUserDto} from "@common/users/model/dto/validate-user.dto";
-import {ResponseValidateUserDto} from "@common/users/model/dto/response-validate-user.dto";
-import {ResponseUserDto} from "@common/users/model/dto/response-user.dto";
-import {ResponseUsersListDTO} from "@common/users/model/dto/response-users-list.dto";
-import {ResponseDeleteUserDto} from "@common/users/model/dto/response-delete-user.dto";
-import {ResponseResetPasswordDto} from "@common/users/model/dto/response-reset-password.dto";
+import {User, UserDocument} from "@modules/users/schemas/user.schema";
+import {UserDTO} from "@modules/users/model/dto/user.dto";
+import {ValidateUserDto} from "@modules/users/model/dto/validate-user.dto";
+import {ResponseValidateUserDto} from "@modules/users/model/dto/response-validate-user.dto";
+import {ResponseUserDto} from "@modules/users/model/dto/response-user.dto";
+import {ResponseUsersListDTO} from "@modules/users/model/dto/response-users-list.dto";
+import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-user.dto";
+import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 
 @Injectable()
 export class UsersService {

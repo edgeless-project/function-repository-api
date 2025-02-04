@@ -1,7 +1,7 @@
 import {ApiConsumes, ApiOkResponse, ApiOperation, ApiTags} from "@nestjs/swagger";
 import {Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, Param, Post, Put} from "@nestjs/common";
-import {ResponseValidateUserDto} from "@common/users/model/dto/response-validate-user.dto";
-import {ValidateUserDto} from "@common/users/model/dto/validate-user.dto";
+import {ResponseValidateUserDto} from "@modules/users/model/dto/response-validate-user.dto";
+import {ValidateUserDto} from "@modules/users/model/dto/validate-user.dto";
 import {AuthService} from "@common/auth/services/auth.service";
 
 

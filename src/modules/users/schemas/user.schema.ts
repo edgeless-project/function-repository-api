@@ -1,7 +1,7 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import mongoose from "mongoose";
-import {UserRole} from "@common/users/model/contract/user.interface";
+import {UserRole} from "@modules/users/model/contract/user.interface";
 import {IsEnum} from "class-validator";
 
 export type UserDocument = User & mongoose.Document;

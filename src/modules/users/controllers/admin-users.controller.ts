@@ -1,11 +1,11 @@
 import {Controller, Logger, Post, Body, Put, Param, Get, Query, Delete} from '@nestjs/common';
 import {ApiTags, ApiOperation, ApiConsumes, ApiOkResponse, ApiQuery} from '@nestjs/swagger';
-import {UsersService} from "@common/users/services/users.service";
-import {ResponseUserDto} from "@common/users/model/dto/response-user.dto";
-import {UserDTO} from "@common/users/model/dto/user.dto";
-import {ResponseValidateUserDto} from "@common/users/model/dto/response-validate-user.dto";
-import {ValidateUserDto} from "@common/users/model/dto/validate-user.dto";
-import {ResponseResetPasswordDto} from "@common/users/model/dto/response-reset-password.dto";
+import {UsersService} from "@modules/users/services/users.service";
+import {ResponseUserDto} from "@modules/users/model/dto/response-user.dto";
+import {UserDTO} from "@modules/users/model/dto/user.dto";
+import {ResponseValidateUserDto} from "@modules/users/model/dto/response-validate-user.dto";
+import {ValidateUserDto} from "@modules/users/model/dto/validate-user.dto";
+import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 
 @ApiTags('Admin')
 @Controller('admin/user')

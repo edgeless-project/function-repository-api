@@ -6,7 +6,7 @@ import { Module } from '@nestjs/common';
 import { FunctionModule } from '@modules/functions/functions.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WorkflowsModule } from '@modules/workflows/workflows.module';
-import {UsersModule} from "@common/users/users.module";
+import {UsersModule} from "@modules/users/users.module";
 
 @Module({
   imports: [

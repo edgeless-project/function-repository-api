@@ -161,7 +161,7 @@ export class FunctionService {
       throw new NotAcceptableException('File not provided');
     }
 
-    // TODO: Type validation
+    // : Type validation
 
     try{
       const stream = new StreamableFile(file.buffer).getStream();

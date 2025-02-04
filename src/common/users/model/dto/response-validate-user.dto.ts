@@ -4,13 +4,13 @@ import {IsDefined, IsNotEmpty} from "class-validator";
 
 export class ResponseValidateUserDto{
 	@ApiProperty({
-		example: "username",
-		description: 'The username to validate',
+		example: "email@email.com",
+		description: 'The email to validate',
 		required: true
 	})
 	@IsDefined()
 	@IsNotEmpty()
-	username: string;
+	email: string;
 
 	@ApiProperty({
 		example: true,

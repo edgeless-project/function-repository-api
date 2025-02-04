@@ -17,4 +17,6 @@ export class ResponseUserDto extends UserDTO {
 	})
 	updatedAt: Date;
 
+
+
 }

@@ -1,19 +1,18 @@
 
 import {ApiProperty} from "@nestjs/swagger";
 import {IsDefined, IsNotEmpty} from "class-validator";
-import {User} from "@common/users/model/contract/user.interface";
+import {User, UserRole} from "@common/users/model/contract/user.interface";
 
 
 export class UserDTO implements User {
 	@ApiProperty({
-		example: 'user',
-		description: 'The User name',
+		example: '00000001',
+		description: 'The User id',
 		type: String,
 		required: true
 	})
 	@IsDefined()
-	@IsNotEmpty()
-	username: string;
+	id: string;
 
 	@ApiProperty({
 		example: 'email@email.com',
@@ -22,15 +21,27 @@ export class UserDTO implements User {
 		required: false
 	})
 	@IsDefined()
+	@IsNotEmpty()
 	email: string;
 
 	@ApiProperty({
 		example: 'password',
 		description: 'The User password',
 		type: String,
-		required: true
+		required: false
 	})
 	@IsDefined()
 	password: string;
 
+	@ApiProperty({
+		example: 'FUNC_DEVELOPER',
+		description: 'The User role',
+		type: String,
+		enum: UserRole,
+		default: UserRole.AppDeveloper,
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	role: UserRole;
 }

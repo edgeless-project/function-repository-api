@@ -5,9 +5,7 @@ import { Model } from 'mongoose';
 import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
 import { Workflow, WorkflowDocument } from '../schemas/workflow.schema';
 import { Function, FunctionDocument } from '@modules/functions/schemas/function.schema';
-import { WorkflowDto } from '../model/dto/workflow.dto';
 import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
-import {FunctionService} from "@modules/functions/services/functions.service";
 import {ResponseWorkflowDto} from "@modules/workflows/model/dto/response-workflow.dto";
 
 

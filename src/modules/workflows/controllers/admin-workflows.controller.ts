@@ -1,8 +1,7 @@
-import { Controller, Logger, Post, Body, Put, UseInterceptors, UploadedFile, Get, Param, Query, Delete, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiBody, ApiQuery } from '@nestjs/swagger';
+import { Controller, Logger, Post, Body, Put, Get, Param, Query, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiConsumes, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 
 import { WorkflowsService } from '../services/workflows.service';
-import { WorkflowDto } from '../model/dto/workflow.dto';
 import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
 import { ResponseDeleteWorkflowDto } from '../model/dto/response-delete-workflow.dto';
 import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';

@@ -88,7 +88,6 @@ export class AdminFunctionController {
     required: false,
     type: String,
   })
-  @ApiOkResponse({ type: FunctionClassSpecificationDto})
   @ApiQuery({
     name: 'type',
     required: false,

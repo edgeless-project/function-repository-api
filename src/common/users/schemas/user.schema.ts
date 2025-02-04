@@ -1,6 +1,8 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Type } from 'class-transformer';
 import mongoose from "mongoose";
+import {UserRole} from "@common/users/model/contract/user.interface";
+import {IsEnum} from "class-validator";
 
 export type UserDocument = User & mongoose.Document;
 
@@ -8,7 +10,7 @@ export type UserDocument = User & mongoose.Document;
 export class User {
 
 	@Prop()
-	username: string;
+	id: string;
 
 	@Prop()
 	email: string;
@@ -16,8 +18,13 @@ export class User {
 	@Prop()
 	password: string;
 
-	@Prop()
-	owner: string;
+	@Prop({
+		type: String,
+		enum: UserRole,
+		default: UserRole.AppDeveloper
+	})
+	@IsEnum(UserRole)
+	role: UserRole;
 
 	@Type(() => Date)
 	@Prop()
@@ -30,4 +37,4 @@ export class User {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-UserSchema.index({ username: 1, owner:1 }, { unique: true });
+UserSchema.index({ email: 1}, { unique: true });

@@ -3,11 +3,11 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { setupSwagger } from './common/swagger';
+import { setupSwagger } from '@common/swagger';
 import helmet from 'helmet';
-import { AccessGuard } from './common/guards/access.guard';
-import { loggerMiddleware } from './common/middlewares/logger.middleware';
-import { TransformInterceptor } from './common/interceptors/TransformInterceptor';
+import { AccessGuard } from '@common/guards/access.guard';
+import { loggerMiddleware } from '@common/middlewares/logger.middleware';
+import { TransformInterceptor } from '@common/interceptors/TransformInterceptor';
 import bodyParser = require('body-parser');
 import { AddressInfo } from 'net';
 

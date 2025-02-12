@@ -7,6 +7,7 @@ export const setupSwagger = (app: INestApplication, config: ConfigService) => {
     .setTitle(config.get('SWAGGER_API_NAME'))
     .setDescription(config.get('SWAGGER_API_DESCRIPTION'))
     .setVersion(config.get('SWAGGER_API_CURRENT_VERSION'))
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup(config.get('SWAGGER_API_ROOT'), app, document);

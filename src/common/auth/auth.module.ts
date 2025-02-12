@@ -19,6 +19,7 @@ import {AuthService} from "@common/auth/services/auth.service";
           secret: configService.get('JWT_SECRET_KEY'),
           signOptions: {
             audience: configService.get('JWT_AUDIENCE'),
+            expiresIn: configService.get('JWT_EXPIRATION_LOGIN_TOKEN'),
           },
         };
       },

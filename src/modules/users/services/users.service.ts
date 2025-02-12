@@ -146,7 +146,7 @@ export class UsersService {
 				throw new Error('Incorrect password.');
 			}
 		} catch (e){
-			const msg = `User not found with email: ${email}. ${e}`;
+			const msg = `User not found with email: ${email}`;
 			this.logger.error('getByEmailAndPass: ' + msg);
 			throw new HttpException(msg, HttpStatus.NOT_FOUND);
 
@@ -217,9 +217,9 @@ export class UsersService {
 			return responseBody;
 
 		}catch (e) {
-			const msg = `Error on validate user: ${email}. ${e}`
+			const msg = `Error on validate user: ${email}.`
 			this.logger.error('validateUser: ' + msg);
-			throw new HttpException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+			throw new HttpException(msg, HttpStatus.UNAUTHORIZED);
 		}
 	}
 

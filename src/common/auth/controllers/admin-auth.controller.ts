@@ -42,7 +42,6 @@ export class AdminAuthController {
 
 	@Get('/apikey/')
 	@Public()
-	@Roles(IS_API_KEY)
 	@ApiOperation({
 		summary: '',
 		description: 'This service returns the existing API Keys on demand. Can be filtered by owner ID.'

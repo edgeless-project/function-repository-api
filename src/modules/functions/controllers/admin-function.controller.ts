@@ -18,7 +18,7 @@ import { UpdateFunctionDto } from '@modules/functions/model/dto/function/update-
 import { ResponseFunctionVersionsDto } from '@modules/functions/model/dto/function/response-function-versions.dt';
 import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
 import { ResponseFunctionListDto } from '@modules/functions/model/dto/function/response-function-list.dto';
-import {Roles} from "@common/decorators/roles.decorator";
+import {IS_API_KEY, Roles} from "@common/decorators/roles.decorator";
 import {UserRole} from "@modules/users/model/contract/user.interface";
 
 @ApiBearerAuth()
@@ -30,7 +30,7 @@ export class AdminFunctionController {
   constructor(private readonly functionService: FunctionService) {}
 
   @Post('')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service creates a new function. To upload the code file you need to use the <i>/upload</i> service first, and copy the provided id.'
@@ -42,7 +42,7 @@ export class AdminFunctionController {
   }
 
   @Put('/:id')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service updates an existing function. To upload the new code file (if you want to upload a new code file) you need to use the <i>/upload</i> service first, and copy the provided id.'
@@ -63,7 +63,7 @@ export class AdminFunctionController {
   }
 
   @Delete('/:id')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: "This service deletes an existing function by its id. If the version is defined, " +
@@ -90,7 +90,7 @@ export class AdminFunctionController {
   }
 
   @Get('/:id')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service returns an existing function by its id. If the version is defined, it returns the function with that version, if not it returns the latest version found.'
@@ -114,7 +114,8 @@ export class AdminFunctionController {
     return this.functionService.getFunction(id, 'admin', version, type);
   }
 
-  @Post('/upload')  //TODO: ADD Roles?
+  @Post('/upload')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service uploads the code file of a function, and temporarily stores it. The service returns an id' +
@@ -141,7 +142,7 @@ export class AdminFunctionController {
   }
 
   @Get('/download/:id')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service downloads the code file of a function from the code file id.'
@@ -159,7 +160,7 @@ export class AdminFunctionController {
   }
 
   @Get('/:id/versions')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service returns the list of existing versions of a function.'
@@ -172,7 +173,7 @@ export class AdminFunctionController {
   }
 
   @Get('')
-  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper, IS_API_KEY)
   @ApiOperation({
     summary: '',
     description: 'This service gets the list of available functions with pagination' +

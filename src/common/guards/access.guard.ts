@@ -24,13 +24,14 @@ export class AccessGuard extends AuthGuard('jwt') {
     }
     //Roles and permissions
     const roles = this.reflector.get<string[]>(ROLES_KEY, context.getHandler());
-    const isAPIKey = await this.apikeyGard.canActivate(context);
+    const accessibleAPIKey = roles.includes(IS_API_KEY);
+    let isAPIKey = false;
     const isPublic = this.reflector.get<boolean>(IS_PUBLIC_KEY, context.getHandler());
     //Environment variables
     const request = context.switchToHttp().getRequest();
     const user: any = request.user;
     //Check permissions
-    const accessibleAPIKey = roles.includes(IS_API_KEY);
+    if(accessibleAPIKey) isAPIKey = await this.apikeyGard.canActivate(context);
     const hasRole = roles ? roles.filter(roleName => user && user.role === roleName).length > 0 : null;
 
     return !!isPublic || (isAPIKey && accessibleAPIKey) || hasRole === true;

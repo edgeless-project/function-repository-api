@@ -1,14 +1,16 @@
 import { Controller, Logger, Post, Body, Put, Get, Param, Query, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiConsumes, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
-
-import { WorkflowsService } from '../services/workflows.service';
-import { CreateWorkflowDto } from '../model/dto/create-workflow.dto';
-import { ResponseDeleteWorkflowDto } from '../model/dto/response-delete-workflow.dto';
-import { UpdateWorkflowDto } from '../model/dto/update-workflow.dto';
+import {ApiTags, ApiOperation, ApiConsumes, ApiOkResponse, ApiQuery, ApiBearerAuth} from '@nestjs/swagger';
+import { WorkflowsService } from '@modules/workflows/services/workflows.service';
+import { CreateWorkflowDto } from '@modules/workflows/model/dto/create-workflow.dto';
+import { ResponseDeleteWorkflowDto } from '@modules/workflows/model/dto/response-delete-workflow.dto';
+import { UpdateWorkflowDto } from '@modules/workflows/model/dto/update-workflow.dto';
 import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
-import { ResponseWorkflowListDto } from '../model/dto/response-workflow-list.dto';
-import { ResponseWorkflowDto } from '../model/dto/response-workflow.dto';
+import { ResponseWorkflowListDto } from '@modules/workflows/model/dto/response-workflow-list.dto';
+import { ResponseWorkflowDto } from '@modules/workflows/model/dto/response-workflow.dto';
+import {Roles} from "@common/decorators/roles.decorator";
+import {UserRole} from "@modules/users/model/contract/user.interface";
 
+@ApiBearerAuth()
 @ApiTags('Admin')
 @Controller('admin/workflow')
 export class AdminWorkflowsController {
@@ -17,6 +19,7 @@ export class AdminWorkflowsController {
   constructor(private readonly workflowsService: WorkflowsService) {}
 
   @Post('')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service creates a new workflow.'
@@ -28,6 +31,7 @@ export class AdminWorkflowsController {
   }
 
   @Put(':name')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service updates a workflow by its name.'
@@ -38,6 +42,7 @@ export class AdminWorkflowsController {
   }
 
   @Delete(':name')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service deletes an existing workflow by its name.'
@@ -48,6 +53,7 @@ export class AdminWorkflowsController {
   }
 
   @Get(':name')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service gets a workflow by its name including the function class specification for each function. If exclude_class_specification is set to true, the function class specification will be omitted.'
@@ -67,6 +73,7 @@ export class AdminWorkflowsController {
   }
 
   @Get('')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service gets the list of available workflows with pagination (by using limit and offset query params), by default limit=10, offset=0. The service also returns the total number of workflows (total attribute).'

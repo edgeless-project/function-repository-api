@@ -16,7 +16,5 @@ export class ResponseUserDto extends UserDTO {
 		required: true
 	})
 	updatedAt: Date;
-
-
-
+	
 }

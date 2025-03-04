@@ -1,18 +1,27 @@
 import { Controller, Logger, Post, Body, Put, UseInterceptors, UploadedFile, Get, Param, Query, Delete, Res } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiBadRequestResponse, ApiConsumes, ApiOkResponse, ApiBody, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiBody,
+  ApiQuery,
+  ApiBearerAuth
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
-
-import { FunctionService } from '../services/functions.service';
-import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
-import { ResponseFunctionDto } from '../model/dto/function/response-function.dto';
-import { ResponseUploadFunctionCodeDto } from '../model/dto/function/response-upload-function-code.dto';
-import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete-function.dto';
-import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
-import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
+import { FunctionService } from '@modules/functions/services/functions.service';
+import { FunctionClassSpecificationDto } from '@modules/functions/model/dto/function/class-specification.dto';
+import { ResponseUploadFunctionCodeDto } from '@modules/functions/model/dto/function/response-upload-function-code.dto';
+import { ResponseDeleteFunctionDto } from '@modules/functions/model/dto/function/response-delete-function.dto';
+import { UpdateFunctionDto } from '@modules/functions/model/dto/function/update-function.dto';
+import { ResponseFunctionVersionsDto } from '@modules/functions/model/dto/function/response-function-versions.dt';
 import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
-import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
+import { ResponseFunctionListDto } from '@modules/functions/model/dto/function/response-function-list.dto';
+import {Roles} from "@common/decorators/roles.decorator";
+import {UserRole} from "@modules/users/model/contract/user.interface";
 
+@ApiBearerAuth()
 @ApiTags('Admin')
 @Controller('admin/function')
 export class AdminFunctionController {
@@ -21,6 +30,7 @@ export class AdminFunctionController {
   constructor(private readonly functionService: FunctionService) {}
 
   @Post('')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service creates a new function. To upload the code file you need to use the <i>/upload</i> service first, and copy the provided id.'
@@ -32,6 +42,7 @@ export class AdminFunctionController {
   }
 
   @Put('/:id')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service updates an existing function. To upload the new code file (if you want to upload a new code file) you need to use the <i>/upload</i> service first, and copy the provided id.'
@@ -52,6 +63,7 @@ export class AdminFunctionController {
   }
 
   @Delete('/:id')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: "This service deletes an existing function by its id. If the version is defined, " +
@@ -78,6 +90,7 @@ export class AdminFunctionController {
   }
 
   @Get('/:id')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service returns an existing function by its id. If the version is defined, it returns the function with that version, if not it returns the latest version found.'
@@ -101,10 +114,13 @@ export class AdminFunctionController {
     return this.functionService.getFunction(id, 'admin', version, type);
   }
 
-  @Post('/upload')
+  @Post('/upload')  //TODO: ADD Roles?
   @ApiOperation({
     summary: '',
-    description: 'This service uploads the code file of a function, and temporarily stores it. The rervice returns an id to be used when creating/updating the function.<br> If the function is not created/updated with the provided code file id before 1 hour, the code file will be deleted automatically.<br><br><strong>Please use this carefully, we do not have file type validation yet.</strong>'
+    description: 'This service uploads the code file of a function, and temporarily stores it. The service returns an id' +
+        ' to be used when creating/updating the function.<br> If the function is not created/updated with the provided code' +
+        ' file id before 1 hour, the code file will be deleted automatically.' +
+        '<br><br><strong>Please use this carefully, we do not have file type validation yet.</strong>'
   })
   @ApiOkResponse({ type: ResponseUploadFunctionCodeDto})
   @ApiConsumes('multipart/form-data')
@@ -125,6 +141,7 @@ export class AdminFunctionController {
   }
 
   @Get('/download/:id')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service downloads the code file of a function from the code file id.'
@@ -142,6 +159,7 @@ export class AdminFunctionController {
   }
 
   @Get('/:id/versions')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
     description: 'This service returns the list of existing versions of a function.'
@@ -154,9 +172,12 @@ export class AdminFunctionController {
   }
 
   @Get('')
+  @Roles(UserRole.ClusterAdmin, UserRole.AppDeveloper, UserRole.FunctionDeveloper)
   @ApiOperation({
     summary: '',
-    description: 'This service gets the list of available functions with pagination (by using limit and offset query params), by default limit=10, offset=0. Can be used to search a function by partial match. Returns the total number of functions (total attribute).'
+    description: 'This service gets the list of available functions with pagination' +
+        ' (by using limit and offset query params), by default limit=10, offset=0. ' +
+        'Can be used to search a function by partial match. Returns the total number of functions (total attribute).'
   })
   @ApiOkResponse({ type: ResponseFunctionListDto})
   @ApiQuery({

@@ -22,7 +22,7 @@ async function bootstrap() {
   app.use(loggerMiddleware);
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  app.useGlobalGuards(new AccessGuard(new Reflector()));
+  app.useGlobalGuards(app.get(AccessGuard));
 
   // Allow CORS from the front URL
   app.enableCors({

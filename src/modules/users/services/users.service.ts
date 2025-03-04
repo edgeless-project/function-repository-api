@@ -10,6 +10,7 @@ import {ResponseUserDto} from "@modules/users/model/dto/response-user.dto";
 import {ResponseUsersListDTO} from "@modules/users/model/dto/response-users-list.dto";
 import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-user.dto";
 import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
+import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 
 @Injectable()
 export class UsersService {
@@ -73,7 +74,6 @@ export class UsersService {
 				createdAt: result.createdAt,
 				updatedAt: result.updatedAt
 			};
-
 			this.logger.debug('createUser: responseBody',responseBody);
 
 			return responseBody;
@@ -154,32 +154,33 @@ export class UsersService {
 		return user;
 	}
 
-	async updateUser(userData: UserDTO, email:string): Promise<User> {
+	async updateUser(userData: UpdateUserDto, id:string): Promise<User> {
 		if (!userData.password) throw new HttpException('updateUser: Password not set.', HttpStatus.BAD_REQUEST);
 
 		let userId = null;
 		// Check if there exists already a user with that email
 		try {
 			const resp = await this.userModel.exists({
-				email: email
+				_id: id
 			}).exec();
 			if (resp) userId = resp
 			else throw new Error('User does not exist');
 		} catch (e){
-			const msg = `A user with the email: ${email} does not exist.`
+			const msg = `A user with the id: ${id} does not exist.`
 			this.logger.error('updateUser: ' + msg);
 			throw new HttpException(msg, HttpStatus.NOT_FOUND);
 		}
 
+		let updateElements = {}
+		if (userData.email) updateElements['email']=userData.email;
+		if (userData.password) updateElements['password'] = this.hashPassword(userData.password);
+		if (userData.role) updateElements['role']=userData.role;
+		updateElements['updatedAt'] = new Date();
+
 		try {
-			const hashPass = this.hashPassword(userData.password);
 			const res = await this.userModel.findOneAndUpdate({_id: userId}, {
-				$set: {
-					email: userData.email,
-					password: hashPass,
-					role: userData.role,
-					updatedAt: new Date(),
-				}},
+				$set: updateElements
+					},
 					{new: true}
 			).exec();
 
@@ -223,15 +224,14 @@ export class UsersService {
 		}
 	}
 
-	async deleteUser(email: string): Promise<ResponseDeleteUserDto>{
+	async deleteUser(id: string): Promise<ResponseDeleteUserDto>{
 		const responseBody: ResponseDeleteUserDto = {count:0};
 		try {
-			const res = await this.userModel.deleteOne({email: email});
-			this.logger.debug(`deleteUser: ${email}`);
+			const res = await this.userModel.deleteOne({_id: id});
 			responseBody.count = res.deletedCount;
 			return responseBody;
 		}catch (e) {
-			const msg = `Could not find user ${email}. ${e}`;
+			const msg = `Could not find user ${id}. ${e}`;
 			this.logger.error(`deleteUser: `+ msg);
 			throw new HttpException(msg,HttpStatus.NOT_FOUND);
 		}
@@ -268,12 +268,11 @@ export class UsersService {
 		}
 	}
 
-	async resetUserPassword(email: string): Promise<ResponseResetPasswordDto>{		//TODO: Set password from front
+	async resetUserPassword(id: string): Promise<ResponseResetPasswordDto>{
 		try {
-			const user = await this.getByEmail(email);
 			const newPass = this.randomPass(12);
-			user.password = newPass;
-			await this.updateUser(user, email);
+			const eventData = {password: newPass} as UpdateUserDto;
+			await this.updateUser(eventData, id);
 			return {
 				newPassword: newPass
 			};

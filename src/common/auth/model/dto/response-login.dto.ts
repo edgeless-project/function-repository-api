@@ -10,4 +10,13 @@ export class ResponseLoginDto {
 	@IsDefined()
 	@IsNotEmpty()
 	access_token: string;
+
+	@ApiProperty({
+		example: '',
+		description: 'Time at which token expires.',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	expires_at: string;
 }

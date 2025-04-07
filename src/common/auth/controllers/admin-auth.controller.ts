@@ -123,7 +123,7 @@ export class AdminAuthController {
 		return this.authService.refreshToken(id, email, role, permissions);
 	}
 
-	@Post('/login/')
+	@Post('/login')
 	@Public()
 	@ApiOperation({
 		summary: '',

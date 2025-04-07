@@ -24,7 +24,7 @@ export class AccessGuard extends AuthGuard('jwt') {
     }
     //Roles and permissions
     const roles = this.reflector.get<string[]>(ROLES_KEY, context.getHandler());
-    const accessibleAPIKey = roles.includes(IS_API_KEY);
+    const accessibleAPIKey = roles?.includes(IS_API_KEY);
     let isAPIKey = false;
     const isPublic = this.reflector.get<boolean>(IS_PUBLIC_KEY, context.getHandler());
     //Environment variables

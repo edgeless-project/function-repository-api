@@ -32,6 +32,7 @@ export class AuthService {
 		const payload:JwtPayload = {id: response.id, email: response.email, role: response.role};
 		return {
 			access_token: this.jwtService.sign(payload),
+			expires_at: new Date(new Date().getTime() + Number(this.configService.get('JWT_EXPIRATION_LOGIN_TOKEN'))).getTime().toString(),
 		}
 	}
 
@@ -49,6 +50,7 @@ export class AuthService {
 			access_token: this.jwtService.sign(refreshPayload,
 					{expiresIn: this.configService.get('JWT_EXPIRATION_REFRESH_TOKEN')}
 			),
+			expires_at: new Date(new Date().getTime() + Number(this.configService.get('JWT_EXPIRATION_REFRESH_TOKEN'))).getTime().toString(),
 		}
 	}
 }

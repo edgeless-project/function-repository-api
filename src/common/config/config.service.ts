@@ -94,4 +94,12 @@ export class ConfigService {
     return this.get('JWT_SECRET');
   }
 
+  public get dbDefaultUsername() {
+    return this.get('DATABASE_DEFAULT_USER');
+  }
+
+  public get dbDefaultPassword() {
+    return this.get('DATABASE_DEFAULT_PASSWORD');
+  }
+
 }

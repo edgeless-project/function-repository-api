@@ -11,6 +11,7 @@ import {ResponseUsersListDTO} from "@modules/users/model/dto/response-users-list
 import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-user.dto";
 import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
+import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
 
 @Injectable()
 export class UsersService {
@@ -155,7 +156,6 @@ export class UsersService {
 	}
 
 	async updateUser(userData: UpdateUserDto, id:string): Promise<User> {
-		if (!userData.password) throw new HttpException('updateUser: Password not set.', HttpStatus.BAD_REQUEST);
 
 		let userId = null;
 		// Check if there exists already a user with that email
@@ -173,7 +173,6 @@ export class UsersService {
 
 		let updateElements = {}
 		if (userData.email) updateElements['email']=userData.email;
-		if (userData.password) updateElements['password'] = this.hashPassword(userData.password);
 		if (userData.role) updateElements['role']=userData.role;
 		updateElements['updatedAt'] = new Date();
 
@@ -195,8 +194,57 @@ export class UsersService {
 
 			return responseBody;
 		}catch (e) {
-			const msg = `A user with the email: ${userData.email} could not be updated. ${e}`
+			let msg = `A user with the email ${userData.email} could not be updated. ${e}`;
+			if (e.code === 11000) msg = `A user with the email ${userData.email} already exists, could not be updated.`;
 			this.logger.error('updateUser: ' + msg);
+			throw new HttpException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	async changeUserPassword(userData: ChangePasswordDto, id:string): Promise<User> {
+		if (!userData.password) {
+			this.logger.error('changeUserPassword: Password is required');
+			throw new Error('Password is required');
+		}
+
+		let userId = null;
+		// Check if there exists already a user with that email
+		try {
+			const resp = await this.userModel.exists({
+				_id: id
+			}).exec();
+			if (resp) userId = resp
+			else throw new Error('User does not exist');
+		} catch (e){
+			const msg = `A user with the id: ${id} does not exist.`
+			this.logger.error('updateUser: ' + msg);
+			throw new HttpException(msg, HttpStatus.NOT_FOUND);
+		}
+
+		let updateElements = {}
+		updateElements['password'] = this.hashPassword(userData.password);
+		updateElements['updatedAt'] = new Date();
+
+		try {
+			const res = await this.userModel.findOneAndUpdate({_id: userId}, {
+					$set: updateElements
+				},
+				{new: true}
+			).exec();
+
+			const responseBody = {
+				id: res._id.toString(),
+				email: res.email,
+				password: null,
+				role: res.role,
+				updatedAt: res.updatedAt,
+				createdAt: res.createdAt,
+			}
+
+			return responseBody;
+		}catch (e) {
+			let msg = `A user with the email ${userId.email} could not be updated. ${e}`;
+			this.logger.error('changeUserPassword: ' + msg);
 			throw new HttpException(msg, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -240,11 +288,11 @@ export class UsersService {
 	async getUsers(limit:number, offset:number): Promise<ResponseUsersListDTO> {
 		try {
 			const total = await this.userModel.countDocuments().exec();
-			const result = await this.userModel.find(
-					{}).sort({email:-1,createdAt:-1})
-					.limit(limit)
-					.skip(offset)
-					.exec();
+			const result = await this.userModel.find({})
+				.sort({email:-1,createdAt:-1})
+				.limit(limit)
+				.skip(offset)
+				.exec();
 			const users: ResponseUserDto[] = result.map( w => ({
 				id: w._id.toString(),
 				email: w.email,

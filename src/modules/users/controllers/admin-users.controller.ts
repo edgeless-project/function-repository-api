@@ -85,7 +85,7 @@ export class AdminUsersController {
 	@Roles(UserRole.ClusterAdmin)
 	@ApiOperation({
 		summary: '',
-		description: 'This allows a cluster admin to update an existing user. Email, password and role are the fields that ' +
+		description: 'This allows a cluster admin to update an existing user. Email and role are the fields that ' +
 				'can be updated. Only a Cluster Admin can update users.'
 	})
 	@ApiOkResponse({ type: ResponseUserDto })
@@ -98,13 +98,13 @@ export class AdminUsersController {
 	@Roles(UserRole.ClusterAdmin)
 	@ApiOperation({
 		summary: '',
-		description: 'This service updates a password from an existing user. Only a Cluster Admin can change a users password.'
+		description: 'This service changes the password from an existing user. Only a Cluster Admin can change a users password.'
 	})
 	@ApiOkResponse({ type: ResponseUserDto })
 	@ApiConsumes('application/json', 'application/x-www-form-urlencoded')
 	async updateUserAdminPass(@Body() eventData: ChangePasswordDto, @Param('id') id: string) {
-		const uChange = eventData as UpdateUserDto;
-		return this.usersService.updateUser(uChange, id);
+		const user_passwd: UpdateUserDto = eventData as UpdateUserDto;
+		return this.usersService.changeUserPassword(user_passwd, id);
 	}
 
 	@Put('/change_password')
@@ -119,7 +119,7 @@ export class AdminUsersController {
 		const user_passwd: UpdateUserDto = eventData as UpdateUserDto;
 		const id = req.user?.id;
 		if (!id) throw new HttpException("Request error",HttpStatus.BAD_REQUEST);
-		return this.usersService.updateUser(user_passwd, id);
+		return this.usersService.changeUserPassword(user_passwd, id);
 	}
 
 	@Delete('/:id')

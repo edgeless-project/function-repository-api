@@ -52,12 +52,13 @@ export class ApikeyService {
 
 	async getApiKeys(offset: number, limit: number, owner?: string): Promise<ResponseListApikeyDto> {
 		const total = await this.ApiKeyModel.countDocuments(owner?{owner:owner}:{}).exec();
-		const result = await this.ApiKeyModel.find(owner?{owner:owner}:{}, { ['key']: 1, ['owner']: 1, ['createdAt']: 1, _id: 0 })
+		const result = await this.ApiKeyModel.find(owner?{owner:owner}:{}, { ['key']: 1, ['owner']: 1, ['createdAt']: 1, ['_id']: 1 })
 				.limit(limit)
 				.skip(offset)
 				.exec();
 
 		const items = result.map(k => ({
+			id: k._id.toString(),
 			key: k.key,
 			owner: k.owner,
 			createdAt: k.createdAt,

@@ -1,4 +1,4 @@
-import {ExecutionContext, HttpException, HttpStatus, Injectable, Logger} from "@nestjs/common";
+import {ExecutionContext, Injectable, Logger} from "@nestjs/common";
 import {AuthGuard} from "@nestjs/passport";
 import {ApikeyService} from "@common/auth/services/apikey.service";
 
@@ -14,13 +14,17 @@ export class ApikeyGard extends AuthGuard('headerapikey'){
 		try {
 			await super.canActivate(context);
 		} catch (error) {
-			// do nothing
+			return false; //API Key prefix ApiKey_ is needed
 		}
 		const request = context.switchToHttp().getRequest();
 		const apikey = request.user;
 		let response: boolean = false;
 		try {
-			response = await this.apikeyService.validateApiKey(apikey);
+			const valid = await this.apikeyService.validateApiKey(apikey);
+			if (valid) {
+				request.user = await this.apikeyService.getUserByApiKey(apikey); // Set the user to the API Key details
+				response = true;
+			}
 		}catch {
 			return false;
 		}

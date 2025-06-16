@@ -12,6 +12,9 @@ export class ApiKey {
 	@Prop()
 	key: string;
 
+	@Prop({unique: true})
+	name: string;
+
 	@Prop()
 	owner: string;
 

@@ -76,11 +76,16 @@ export class AdminAuthController {
 		summary: '',
 		description: 'This service creates a valid API key and register that key under the owner ID.'
 	})
+	@ApiQuery({
+		name: 'name',
+		required: false,
+		type: String,
+	})
 	@ApiOkResponse({ type: ResponseCreateApikeyDto })
-	async CreateApiKey(@Req() req) {
+	async CreateApiKey(@Req() req, @Body('name') name?: string) {
 		const owner = req.user?.id
 		if (!owner) {throw new HttpException("Invalid credentials", HttpStatus.UNAUTHORIZED); }
-		return this.apikeyService.createKey(32, owner);
+		return this.apikeyService.createKey(32, owner, name);
 	}
 
 	@Delete('/apikey/:id')

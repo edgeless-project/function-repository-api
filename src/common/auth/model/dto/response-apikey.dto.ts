@@ -13,6 +13,13 @@ export class ResponseApikeyDto extends ApiKeyDTO{
 
 	@ApiProperty({
 		example: '',
+		description: 'Role of the key owner.',
+		required: false
+	})
+	role: string;
+
+	@ApiProperty({
+		example: '',
 		description: 'Date of creation of the API key.',
 		required: false
 	})

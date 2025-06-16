@@ -10,6 +10,13 @@ export class ApiKeyDTO implements ApiKey{
 	key: string;
 
 	@ApiProperty({
+		example: 'My API Key',
+		description: 'String representing the name related to the API Key.',
+		required: false
+	})
+	name: string;
+
+	@ApiProperty({
 		example: 'User',
 		description: 'String representing the user that created the API Key.',
 		required: false

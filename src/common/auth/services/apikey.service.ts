@@ -32,7 +32,7 @@ export class ApikeyService {
 		return result;
 	}
 
-	async createKey(len: number, owner: string, name?: string): Promise<ResponseCreateApikeyDto> {
+	async createKey(len: number, owner: string, name: string): Promise<ResponseCreateApikeyDto> {
 		const key = this.randomPass(len);
 		const resp = await this.ApiKeyModel.create({key: key, name:name, owner: owner, createdAt: new Date()});
 
@@ -45,8 +45,19 @@ export class ApikeyService {
 		};
 	}
 
-	async deleteKey(id: string): Promise<ResponseDeleteDto> {
-		const res = await this.ApiKeyModel.deleteOne({_id: id}).exec();
+	async deleteKey(id: string, owner?: string): Promise<ResponseDeleteDto> {
+		const query: any = { _id: id };
+		if (owner) {
+			query.owner = owner;
+		}
+		const res = await this.ApiKeyModel.deleteOne(query).exec();
+		return {
+			elementsDeleted: res.deletedCount
+		}
+	}
+
+	async deleteKeysByOwner(owner: string): Promise<ResponseDeleteDto> {
+		const res = await this.ApiKeyModel.deleteMany({ owner: owner }).exec();
 		return {
 			elementsDeleted: res.deletedCount
 		}
@@ -57,14 +68,15 @@ export class ApikeyService {
 		return !!resp;
 	}
 
-	async getApiKey(id: string): Promise<ResponseApikeyDto> {
+	async getApiKey(id: string, own?: string): Promise<ResponseApikeyDto> {
 		const isObjectIdType = Types.ObjectId.isValid(id);
 		const res = await this.ApiKeyModel.findOne({
 			$or: [
 				isObjectIdType?{ _id: id }:{},
 				{ key: id },
 				{ name: id }
-			]
+			],
+			...(own ? { owner: own } : {})
 		}).exec();
 
 
@@ -77,10 +89,15 @@ export class ApikeyService {
 			createdAt: res.createdAt,
 		};
 
-		const owner = await this.usersService.getById(key.owner);
-		if (owner) {
-			key.owner = owner.email;
-			key.role = owner.role;
+		try {
+			const owner = await this.usersService.getById(key.owner);
+			if (owner) {
+				key.owner = owner.email;
+				key.role = owner.role;
+			}
+		}catch (e) {
+			const msg = `User not found with id: ${key.owner}.`
+			this.logger.error('getApiKey: ' + msg);
 		}
 		return key;
 	}
@@ -108,7 +125,7 @@ export class ApikeyService {
 
 		const items: ResponseApikeyDto[] = result.map(k => ({
 			id: k._id.toString(),
-			key: k.key,
+			key: k.key.slice(0, 5)+"**************",
 			name: k.name,
 			owner: k.owner,
 			role : null,
@@ -116,10 +133,15 @@ export class ApikeyService {
 		}));
 
 		for (const item of items) {
-			const owner = await this.usersService.getById(item.owner);
-			if (owner) {
-				item.owner = owner.email;
-				item.role = owner.role;
+			try {
+				const owner = await this.usersService.getById(item.owner);
+				if (owner) {
+					item.owner = owner.email;
+					item.role = owner.role;
+				}
+			}catch (e) {
+				const msg = `User not found with id: ${item.owner}.`
+				this.logger.error('getApiKeys: ' + msg);
 			}
 		}
 
@@ -130,7 +152,5 @@ export class ApikeyService {
 			offset
 		};
 	}
-
-
 
 }

@@ -4,6 +4,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ROLES_KEY, IS_API_KEY } from "@common/decorators/roles.decorator";
 import { ApikeyGard } from "@common/guards/apikey.gard";
 import { IS_PUBLIC_KEY } from "@common/decorators/public.decorator";
+import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.interface";
 
 @Injectable()
 export class AccessGuard extends AuthGuard('jwt') {
@@ -29,12 +30,11 @@ export class AccessGuard extends AuthGuard('jwt') {
     //Check Valid API Key
     if(accessibleAPIKey) isAPIKeyValid = await this.apikeyGard.canActivate(context);
     //Environment variables
-    const request = context.switchToHttp().getRequest();
-    const user: any = request.user;
+    const request: jwtPayloadRequest = context.switchToHttp().getRequest();
+    const user = request.user;
 
     //Check correct role
     const hasRole = !!roles?.filter(roleName => user?.role === roleName).length;
-
     return !!isPublic || (isAPIKeyValid && accessibleAPIKey) || hasRole;
   }
 }

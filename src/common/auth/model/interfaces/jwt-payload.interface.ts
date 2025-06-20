@@ -6,3 +6,7 @@ export interface JwtPayload {
   exp?: number;
   permissions?: string[];
 }
+
+export interface jwtPayloadRequest extends Request {
+  user?: JwtPayload;
+}

@@ -12,6 +12,7 @@ import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-us
 import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
+import {ApikeyService} from "@common/auth/services/apikey.service";
 
 @Injectable()
 export class UsersService {

@@ -30,6 +30,7 @@ import {UserDTO} from "@modules/users/model/dto/user.dto";
 import {Roles, IS_API_KEY} from "@common/decorators/roles.decorator";
 import {UserRole} from "@modules/users/model/contract/user.interface";
 import {Public} from "@common/decorators/public.decorator";
+import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.interface";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
@@ -41,7 +42,7 @@ export class AdminAuthController {
 			private readonly apikeyService: ApikeyService) {}
 
 	@Get('/apikey/')
-	@Public()
+	@Roles(...Object.values(UserRole))
 	@ApiOperation({
 		summary: '',
 		description: 'This service returns the existing API Keys on demand. Can be filtered by owner ID.'
@@ -63,15 +64,19 @@ export class AdminAuthController {
 	})
 	@ApiOkResponse({type:ResponseListApikeyDto})
 	async GetApiKeys(
+			@Req() req : jwtPayloadRequest,
 			@Query('offset', new OptionalParseIntPipe('0')) offset: number,
 			@Query('limit', new OptionalParseIntPipe('10')) limit: number,
-			@Query('owner') owner?: string,
 	) {
-		return this.apikeyService.getApiKeys(offset, limit, owner);
+		if (req.user?.role == UserRole.ClusterAdmin) {
+			return this.apikeyService.getApiKeys(offset, limit);
+		}else if (req.user?.id) {
+			return this.apikeyService.getApiKeys(offset, limit, req.user.id);
+		}else return this.apikeyService.getApiKeys(offset, 0);
 	}
 
 	@Post('/apikey/')
-	@Roles(UserRole.ClusterAdmin)
+	@Roles(...Object.values(UserRole))
 	@ApiOperation({
 		summary: '',
 		description: 'This service creates a valid API key and register that key under the owner ID.'
@@ -82,21 +87,46 @@ export class AdminAuthController {
 		type: String,
 	})
 	@ApiOkResponse({ type: ResponseCreateApikeyDto })
-	async CreateApiKey(@Req() req, @Body('name') name?: string) {
+	async CreateApiKey(@Req() req: jwtPayloadRequest, @Body('name') name?: string) {
 		const owner = req.user?.id
 		if (!owner) {throw new HttpException("Invalid credentials", HttpStatus.UNAUTHORIZED); }
 		return this.apikeyService.createKey(32, owner, name);
 	}
 
+	@Post('/apikey/get')
+	@Roles(...Object.values(UserRole))
+	@ApiOperation({
+		summary: '',
+		description: 'This service gets an API key.'
+	})
+	@ApiQuery({
+		name: 'id',
+		required: true,
+		type: String,
+	})
+	@ApiOkResponse({ type: ResponseCreateApikeyDto })
+	async getApiKey(@Req() req: jwtPayloadRequest, @Body('id') id: string) {
+		const owner = req.user?.id
+		if (!owner) {throw new HttpException("Invalid credentials", HttpStatus.UNAUTHORIZED); }
+		if (req.user?.role == UserRole.ClusterAdmin) {
+			return this.apikeyService.getApiKey(id);
+		}else
+			return this.apikeyService.getApiKey(id, owner);
+
+	}
+
 	@Delete('/apikey/:id')
-	@Roles(UserRole.ClusterAdmin)
+	@Roles(...Object.values(UserRole))
 	@ApiOperation({
 		summary: '',
 		description: 'This service deletes an existing API Key.'
 	})
 	@ApiOkResponse({type:ResponseDeleteDto})
-	async DeleteApiKey(@Param('id') id: string) {
-		return this.apikeyService.deleteKey(id);
+	async DeleteApiKey(@Req() req: jwtPayloadRequest, @Param('id') id: string) {
+		if (req.user?.role == UserRole.ClusterAdmin) {
+			return this.apikeyService.deleteKey(id);
+		}else
+			return this.apikeyService.deleteKey(id, req.user?.id);
 	}
 
 	@Get('/info')
@@ -106,7 +136,7 @@ export class AdminAuthController {
 		description: 'Get user information from token.'
 	})
 	@ApiOkResponse({type:UserDTO})
-	async getMe(@Req() req) {
+	async getMe(@Req() req: jwtPayloadRequest) {
 		const email = req.user?.email;
 		if (!email) throw new HttpException("Request error", HttpStatus.BAD_REQUEST)
 		return this.authService.getUser(req.user.email);
@@ -119,7 +149,7 @@ export class AdminAuthController {
 		description: 'This service refreshes a token and returns the new access token.'
 	})
 	@ApiOkResponse({type:ResponseLoginDto})
-	async refreshToken(@Req() req) {
+	async refreshToken(@Req() req: jwtPayloadRequest) {
 		const id :string | undefined = req.user?.id;
 		const email :string | undefined = req.user?.email;
 		const role:string | undefined = req.user?.role;

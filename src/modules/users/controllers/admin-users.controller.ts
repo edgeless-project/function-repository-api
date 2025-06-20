@@ -23,6 +23,7 @@ import {UserRole} from "@modules/users/model/contract/user.interface";
 import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-user.dto";
+import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.interface";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
@@ -115,7 +116,7 @@ export class AdminUsersController {
 	})
 	@ApiOkResponse({ type: ResponseUserDto })
 	@ApiConsumes('application/json', 'application/x-www-form-urlencoded')
-	async updateUser(@Body() eventData: ChangePasswordDto, @Req() req) {
+	async updateUser(@Body() eventData: ChangePasswordDto, @Req() req: jwtPayloadRequest) {
 		const user_passwd: UpdateUserDto = eventData as UpdateUserDto;
 		const id = req.user?.id;
 		if (!id) throw new HttpException("Request error",HttpStatus.BAD_REQUEST);

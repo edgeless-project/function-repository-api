@@ -22,7 +22,7 @@ export class ApikeyGard extends AuthGuard('headerapikey'){
 		try {
 			const valid = await this.apikeyService.validateApiKey(apikey);
 			if (valid) {
-				request.user = await this.apikeyService.getUserByApiKey(apikey); // Set the user to the API Key details
+				request.user = await this.apikeyService.getUserByApiKey(apikey); // Set user to the API Key details
 				response = true;
 			}
 		}catch {

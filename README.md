@@ -25,6 +25,8 @@ The **Function Repository API** is a  component of [EDGELESS](https://edgeless-p
 This API is intended for:
 - **Function Developers (funcdev)**: To manage functions.
 - **Application Developers (appdev)**: To manage workflows.
+- **Cluster Administrators (clusteradmin)**: To manage workflows, functions, users, and API keys.
+- **API Keys**: API keys are intended for specific software applications to access the API repository. Each key has the same role permissions as the user that creates it, but an endpoint needs to specifically allow access to it through the use of a key. The endpoints that allow the use of the API key are mostly for the management of functions and workflows, such as creating, updating, and deleting functions and workflows.
 
 ## Technology Stack
 
@@ -97,6 +99,14 @@ To deploy the API using Docker, follow these steps:
     ```bash
     docker run -p 3000:3000 function-repository-api
     ```
+   
+## Security
+Endpoints are protected by JWT authentication. Users must authenticate to access the API. The API supports role-based access control, allowing different permissions based on user roles.
+
+All endpoints are defined as with one or multiple of the following options 
+-   ``@Public()``: This endpoint is public and does not require authentication.
+-   ``@Role(...roles)``: This endpoint requires the user to have one of the specified roles. In some cases the roles list contains 'IS_API_KEY' which means that the endpoint can be accessed with an API key that needs to have one of the previously mentioned roles on the label.
+___
 
 ## License
 

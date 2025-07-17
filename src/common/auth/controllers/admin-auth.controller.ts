@@ -132,8 +132,8 @@ export class AdminAuthController {
 	@Get('/info')
 	@Roles(...Object.values(UserRole))
 	@ApiOperation({
-		summary: '',
-		description: 'Get user information from token.'
+		 summary: '',
+		 description: 'Get user information from token.'
 	})
 	@ApiOkResponse({type:UserDTO})
 	async getMe(@Req() req: jwtPayloadRequest) {

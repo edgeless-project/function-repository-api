@@ -8,13 +8,13 @@ import { Workflow, WorkflowSchema } from './schemas/workflow.schema';
 import { FunctionModule } from '@modules/functions/functions.module';
 
 @Module({
-  imports: [
-    ConfigModule,
-    MongooseModule.forFeature([{ name: Workflow.name, schema: WorkflowSchema }]), 
-    FunctionModule
-  ],
-  controllers: [AdminWorkflowsController],
-  providers: [WorkflowsService],
-  exports: [],
+	imports: [
+		ConfigModule,
+		MongooseModule.forFeature([{ name: Workflow.name, schema: WorkflowSchema }]),
+		FunctionModule
+	],
+	controllers: [AdminWorkflowsController],
+	providers: [WorkflowsService],
+	exports: [],
 })
 export class WorkflowsModule {}

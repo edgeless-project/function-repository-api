@@ -9,28 +9,28 @@ import { WorkflowsModule } from '@modules/workflows/workflows.module';
 import {UsersModule} from "@modules/users/users.module";
 
 @Module({
-  imports: [
-    ConfigModule,
-    AuthModule,
-    UsersModule,
-    FunctionModule,
-    WorkflowsModule,
-    DatabaseModule,
-    ScheduleModule.forRoot()
-  ],
+	imports: [
+		ConfigModule,
+		AuthModule,
+		UsersModule,
+		FunctionModule,
+		WorkflowsModule,
+		DatabaseModule,
+		ScheduleModule.forRoot()
+	],
 })
 export class AppModule {
-  static port: string | number;
-  static isDev: boolean;
-  static globalPrefix: string;
-  static config: ConfigService;
-  static frontUrl: string;
+	static port: string | number;
+	static isDev: boolean;
+	static globalPrefix: string;
+	static config: ConfigService;
+	static frontUrl: string;
 
-  constructor(private readonly config: ConfigService) {
-    AppModule.port = config.get('API_PORT');
-    AppModule.globalPrefix = config.get('API_GLOBAL_PREFIX');
-    AppModule.isDev = config.isDev;
-    AppModule.config = config;
-    AppModule.frontUrl = config.get('APP_FRONT_URL');
-  }
+	constructor(private readonly config: ConfigService) {
+		AppModule.port = config.get('API_PORT');
+		AppModule.globalPrefix = config.get('API_GLOBAL_PREFIX');
+		AppModule.isDev = config.isDev;
+		AppModule.config = config;
+		AppModule.frontUrl = config.get('APP_FRONT_URL');
+	}
 }

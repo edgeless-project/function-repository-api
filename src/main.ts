@@ -12,49 +12,49 @@ import bodyParser = require('body-parser');
 import { AddressInfo } from 'net';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
-  const logger = new Logger('Main', { timestamp: true });
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
+	const logger = new Logger('Main', { timestamp: true });
 
-  app.setGlobalPrefix(AppModule.globalPrefix);
+	app.setGlobalPrefix(AppModule.globalPrefix);
 
-  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+	app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
-  app.use(loggerMiddleware);
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.useGlobalGuards(app.get(AccessGuard));
+	app.use(loggerMiddleware);
+	app.use(bodyParser.json());
+	app.use(bodyParser.urlencoded({ extended: true }));
+	app.useGlobalGuards(app.get(AccessGuard));
 
-  // Allow CORS from the front URL
-  app.enableCors({
-    origin: AppModule.frontUrl,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept, Authorization',
-    credentials: true,
-  });
+	// Allow CORS from the front URL
+	app.enableCors({
+		origin: AppModule.frontUrl,
+		methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+		allowedHeaders: 'Content-Type, Accept, Authorization',
+		credentials: true,
+	});
 
-  setupSwagger(app, AppModule.config);
+	setupSwagger(app, AppModule.config);
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true
-  }));
+	app.useGlobalPipes(new ValidationPipe({
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true
+	}));
 
-  app.useGlobalInterceptors(new TransformInterceptor());
+	app.useGlobalInterceptors(new TransformInterceptor());
 
-  await app.listen(AppModule.port);
+	await app.listen(AppModule.port);
 
-   // Log current url of app and documentation
-  const address = app.getHttpServer().address() as AddressInfo;
-  let baseUrl = address.address;
-  if (baseUrl === '0.0.0.0' || baseUrl === '::') {
-    baseUrl = 'localhost';
-  }
-  const url = `http://${baseUrl}:${AppModule.port}${AppModule.globalPrefix}`;
-  logger.log(`Listening to ${url}`);
-  if (AppModule.isDev) {
-    logger.log(`API Documentation available at ${url}/docs`);
-  }
+	// Log current url of app and documentation
+	const address = app.getHttpServer().address() as AddressInfo;
+	let baseUrl = address.address;
+	if (baseUrl === '0.0.0.0' || baseUrl === '::') {
+		baseUrl = 'localhost';
+	}
+	const url = `http://${baseUrl}:${AppModule.port}${AppModule.globalPrefix}`;
+	logger.log(`Listening to ${url}`);
+	if (AppModule.isDev) {
+		logger.log(`API Documentation available at ${url}/docs`);
+	}
 }
 
 bootstrap();

@@ -6,31 +6,31 @@ import { ResourceDto } from "./resource.dto";
 import { CreateWorkflowFunctionDto } from "./create-workflow-function.dto";
 
 export class UpdateWorkflowDto {
-    
-    @ApiProperty({
-        description: 'The workflow functions',
-        type: [CreateWorkflowFunctionDto],
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    functions: CreateWorkflowFunctionDto[];
 
-    @ApiProperty({
-        description: 'The workflow resources',
-        type: [ResourceDto],
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    resources: ResourceDto[];
+	@ApiProperty({
+		description: 'The workflow functions',
+		type: [CreateWorkflowFunctionDto],
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	functions: CreateWorkflowFunctionDto[];
 
-    @ApiProperty({
-        description: 'The workflow annotations',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    annotations: AnnotationDto;
+	@ApiProperty({
+		description: 'The workflow resources',
+		type: [ResourceDto],
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	resources: ResourceDto[];
+
+	@ApiProperty({
+		description: 'The workflow annotations',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	annotations: AnnotationDto;
 
 }

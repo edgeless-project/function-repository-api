@@ -7,7 +7,7 @@ import {
 
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { classToPlain } from 'class-transformer';
+import {instanceToPlain} from 'class-transformer';
 
 export interface Response {
 	data: any;
@@ -20,6 +20,6 @@ export class TransformInterceptor
 		context: ExecutionContext,
 		next: CallHandler,
 	): Observable<any> {
-		return next.handle().pipe(map(data => classToPlain(data) ));
+		return next.handle().pipe(map(data => instanceToPlain(data) ));
 	}
 }

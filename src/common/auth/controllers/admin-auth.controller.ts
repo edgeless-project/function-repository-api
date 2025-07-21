@@ -34,7 +34,7 @@ import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.inter
 
 @ApiBearerAuth()
 @ApiTags('Admin')
-@Controller('admin/auth')
+@Controller('auth')
 export class AdminAuthController {
 	private logger = new Logger('AdminAuthController', {timestamp: true});
 	constructor(

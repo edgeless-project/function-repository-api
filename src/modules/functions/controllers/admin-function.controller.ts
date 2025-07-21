@@ -23,7 +23,7 @@ import {UserRole} from "@modules/users/model/contract/user.interface";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
-@Controller('admin/function')
+@Controller('function')
 export class AdminFunctionController {
 	private logger = new Logger('AdminFunctionController', { timestamp: true});
 

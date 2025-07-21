@@ -12,7 +12,7 @@ import {UserRole} from "@modules/users/model/contract/user.interface";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
-@Controller('admin/workflow')
+@Controller('workflow')
 export class AdminWorkflowsController {
 	private logger = new Logger('AdminWorkflowsController', { timestamp: true});
 

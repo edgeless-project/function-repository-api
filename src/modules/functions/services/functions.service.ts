@@ -356,7 +356,6 @@ export class FunctionService {
 			}
 
 			try {
-
 				// Delete function code
 				await this.bucket.delete(new Types.ObjectId(functionData.code_file_id));
 

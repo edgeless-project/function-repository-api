@@ -1,5 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDefined, IsNotEmpty } from "class-validator";
 
 import { FunctionClassSpecificationDto } from "./class-specification.dto";
 

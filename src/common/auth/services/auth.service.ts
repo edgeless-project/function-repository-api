@@ -1,12 +1,11 @@
 import {
 	HttpException,
 	HttpStatus,
-	Injectable, Logger, SetMetadata
+	Injectable, Logger
 } from '@nestjs/common';
 import {UsersService} from "@modules/users/services/users.service";
 import {ValidateUserDto} from "@modules/users/model/dto/validate-user.dto";
 import {JwtService} from "@nestjs/jwt";
-import {User} from "@modules/users/schemas/user.schema";
 import {JwtPayload} from "@common/auth/model/interfaces/jwt-payload.interface";
 import {ConfigService} from "@common/config/config.service";
 import {UserDTO} from "@modules/users/model/dto/user.dto";

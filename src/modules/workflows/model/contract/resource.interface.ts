@@ -3,4 +3,4 @@ export interface Resource {
 	class_type: string;
 	output_mapping: any;
 	configurations: any;
-};
+}

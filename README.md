@@ -6,7 +6,7 @@
 
 ## Overview
 
-The **Function Repository API** is a  component of [EDGELESS](https://edgeless-project.eu/), designed to store and manage both functions and workflows. This API allows for handling of multiple versions of functions, including their creation, update, deletion, and retrieval. It also provides tools for defining and managing workflows that utilize these functions.
+The **Function Repository API** is a  component of [EDGELESS](https://edgeless-project.eu/), designed to store and manage both functions and workflows. This API allows for handling multiple versions of functions, including their creation, update, deletion, and retrieval. It also provides tools for defining and managing workflows that use these functions.
 
 ## Features
 
@@ -45,7 +45,7 @@ use of a key. The endpoints that allow the use of the API key are mostly for the
 #### MongoDB Installation (with Docker Container)
 
 1. Download MongoDB Image
- ```sh
+```sh
 docker pull mongo:4
  ```
 
@@ -70,10 +70,9 @@ docker run --name mongo-nest -p 27017:27017 -d mongo:4
 
 Task automation is based on [NPM scripts](https://docs.npmjs.com/misc/scripts).
 
-Task                            | Description
---------------------------------|--------------------------------------------------------------------------------------
-`npm start`                     | Run development server on `http://localhost:3003/`
-
+| Task        | Description                                        |
+|-------------|----------------------------------------------------|
+| `npm start` | Run development server on `http://localhost:3003/` |
 
 ----------
 

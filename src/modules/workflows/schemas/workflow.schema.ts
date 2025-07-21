@@ -1,7 +1,6 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Type } from 'class-transformer';
-import {string} from "joi";
 
 export type WorkflowDocument = Workflow & mongoose.Document;
 

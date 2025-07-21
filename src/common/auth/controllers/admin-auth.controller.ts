@@ -1,6 +1,5 @@
 import {
 	ApiBearerAuth,
-	ApiBody,
 	ApiConsumes,
 	ApiOkResponse,
 	ApiOperation,
@@ -27,7 +26,7 @@ import {ResponseCreateApikeyDto} from "@common/auth/model/dto/response-create-ap
 import {ResponseDeleteDto} from "@common/auth/model/dto/response-delete.dto";
 import {ResponseListApikeyDto} from "@common/auth/model/dto/response-list-apikey.dto";
 import {UserDTO} from "@modules/users/model/dto/user.dto";
-import {Roles, IS_API_KEY} from "@common/decorators/roles.decorator";
+import {Roles} from "@common/decorators/roles.decorator";
 import {UserRole} from "@modules/users/model/contract/user.interface";
 import {Public} from "@common/decorators/public.decorator";
 import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.interface";

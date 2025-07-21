@@ -19,7 +19,7 @@ export class ResourceDto implements Resource {
 
 	@ApiProperty({
 		example: '{ "new_request": "external_trigger" }',
-		description: 'funtions for the output mapping as a JSON object'
+		description: 'functions for the output mapping as a JSON object'
 	})
 	@IsOptional()
 	output_mapping: any;

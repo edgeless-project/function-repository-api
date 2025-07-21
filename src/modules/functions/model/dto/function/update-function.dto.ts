@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
+import { IsDefined, IsNotEmpty } from "class-validator";
 import {FunctionType} from "../../contract/function/class-specification.interface";
 
 export class UpdateFunctionDto  {

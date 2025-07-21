@@ -1,10 +1,8 @@
-import {HttpException, HttpStatus, Injectable, Logger} from "@nestjs/common";
+import {Injectable, Logger} from "@nestjs/common";
 import {ApiKey, ApiKeyDocument} from "@common/auth/schemas/apikey.schema";
 import {Model, Types} from "mongoose";
 import {InjectModel} from "@nestjs/mongoose";
 import {ResponseCreateApikeyDto} from "@common/auth/model/dto/response-create-apikey.dto";
-import {DeleteResult} from "mongodb";
-import {ApiKeyDTO} from "@common/auth/model/dto/apikey.dto";
 import {ResponseDeleteDto} from "@common/auth/model/dto/response-delete.dto";
 import {ResponseListApikeyDto} from "@common/auth/model/dto/response-list-apikey.dto";
 import {UsersService} from "@modules/users/services/users.service";

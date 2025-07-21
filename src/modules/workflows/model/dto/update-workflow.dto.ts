@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
+import { IsDefined, IsNotEmpty } from "class-validator";
 
 import { AnnotationDto } from "./annotation.dto";
 import { ResourceDto } from "./resource.dto";

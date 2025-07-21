@@ -6,4 +6,4 @@ export interface Function {
 	class_specification: FunctionClassSpecification;
 	output_mapping: any;
 	annotations: FunctionAnnotation;
-};
+}

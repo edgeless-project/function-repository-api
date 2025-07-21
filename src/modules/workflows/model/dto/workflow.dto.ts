@@ -1,5 +1,5 @@
 import {ApiProperty, getSchemaPath} from "@nestjs/swagger";
-import { IsDefined, IsNotEmpty, IsOptional } from "class-validator";
+import { IsDefined, IsNotEmpty } from "class-validator";
 
 import { Workflow } from "../contract/workflow.interface";
 import { FunctionDto } from "./function.dto";

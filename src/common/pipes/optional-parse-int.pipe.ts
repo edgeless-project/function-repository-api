@@ -1,9 +1,9 @@
-import { ParseIntPipe, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
+import { ParseIntPipe, Injectable, ArgumentMetadata } from '@nestjs/common';
 
 @Injectable()
 export class OptionalParseIntPipe extends ParseIntPipe {
 
-	private defaultValue;
+	private readonly defaultValue;
 
 	constructor(defaultValue: string ) {
 		super();

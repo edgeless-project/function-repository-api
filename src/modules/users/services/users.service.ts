@@ -12,7 +12,6 @@ import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-us
 import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
-import {ApikeyService} from "@common/auth/services/apikey.service";
 
 @Injectable()
 export class UsersService {
@@ -184,7 +183,7 @@ export class UsersService {
 					{new: true}
 			).exec();
 
-			const responseBody = {
+			return {
 				id: res._id.toString(),
 				email: res.email,
 				password: null,
@@ -193,7 +192,6 @@ export class UsersService {
 				createdAt: res.createdAt,
 			}
 
-			return responseBody;
 		}catch (e) {
 			let msg = `A user with the email ${userData.email} could not be updated. ${e}`;
 			if (e.code === 11000) msg = `A user with the email ${userData.email} already exists, could not be updated.`;
@@ -233,7 +231,7 @@ export class UsersService {
 				{new: true}
 			).exec();
 
-			const responseBody = {
+			return {
 				id: res._id.toString(),
 				email: res.email,
 				password: null,
@@ -242,7 +240,6 @@ export class UsersService {
 				createdAt: res.createdAt,
 			}
 
-			return responseBody;
 		}catch (e) {
 			let msg = `A user with the email ${userId.email} could not be updated. ${e}`;
 			this.logger.error('changeUserPassword: ' + msg);

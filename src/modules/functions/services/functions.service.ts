@@ -1,5 +1,4 @@
 import {
-	HttpException,
 	Injectable,
 	InternalServerErrorException,
 	Logger,
@@ -28,7 +27,7 @@ import moment from "moment";
 @Injectable()
 export class FunctionService {
 	private logger = new Logger('FunctionService', { timestamp: true});
-	private documentBatchSize = 1048576; //Default Size in Bytes
+	private readonly documentBatchSize: number = 1048576; //Default Size in Bytes
 	//GridFS Connexions
 	private functionCodesMeta = this.functionModel.db.collection('functioncodes.files');
 	private bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"functioncodes"});
@@ -111,13 +110,9 @@ export class FunctionService {
 			try {
 				const {
 					function_type,
-					id,
-					version,
 					code_file_id,
-					outputs,
 					createdAt,
 					updatedAt,
-					_id
 				} = await this.functionModel.create({
 					owner:owner,
 					id: functionData.id,

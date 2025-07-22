@@ -1,25 +1,25 @@
 import {
-    CallHandler,
-    ExecutionContext,
-    Injectable,
-    NestInterceptor,
-  } from '@nestjs/common';
+	CallHandler,
+	ExecutionContext,
+	Injectable,
+	NestInterceptor,
+} from '@nestjs/common';
 
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { classToPlain } from 'class-transformer';
+import {instanceToPlain} from 'class-transformer';
 
 export interface Response {
-  data: any;
+	data: any;
 }
 
 @Injectable()
 export class TransformInterceptor
-implements NestInterceptor {
-    intercept(
-        context: ExecutionContext,
-        next: CallHandler,
-    ): Observable<any> {
-        return next.handle().pipe(map(data => classToPlain(data) ));
-    }
+	implements NestInterceptor {
+	intercept(
+		context: ExecutionContext,
+		next: CallHandler,
+	): Observable<any> {
+		return next.handle().pipe(map(data => instanceToPlain(data) ));
+	}
 }

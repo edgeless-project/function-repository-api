@@ -1,13 +1,13 @@
-import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Schema, Prop } from '@nestjs/mongoose';
 
-@Schema() 
+@Schema()
 export class FunctionCode {
-  @Prop()
-  mimetype: string;
+	@Prop()
+	mimetype: string;
 
-  @Prop()
-  originalname: string;
+	@Prop()
+	originalname: string;
 
-  @Prop()
-  code: Buffer;
+	@Prop()
+	code: Buffer;
 }

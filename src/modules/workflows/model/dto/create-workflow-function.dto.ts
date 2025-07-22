@@ -4,7 +4,7 @@ import {FunctionSimpleDto} from "@modules/workflows/model/dto/function-simple.dt
 
 export class CreateWorkflowFunctionDto extends FunctionSimpleDto{
 
-    @IsOptional()
-    _id: ObjectId;
+	@IsOptional()
+	_id: ObjectId;
 
 }

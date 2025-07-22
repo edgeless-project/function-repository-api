@@ -7,38 +7,38 @@ import { FunctionAnnotationDto } from "@modules/functions/model/dto/function/fun
 
 export class FunctionDto implements Function {
 
-    @ApiProperty({
-        example: 'incr',
-        description: 'The function name',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    name: string;
+	@ApiProperty({
+		example: 'incr',
+		description: 'The function name',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	name: string;
 
-    @ApiProperty({
-        description: 'The function class specification',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    class_specification: FunctionClassSpecificationDto;
+	@ApiProperty({
+		description: 'The function class specification',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	class_specification: FunctionClassSpecificationDto;
 
-    @ApiProperty({
-        example: '{ "result": "double" }',
-        description: 'The functions for the output mapping',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    output_mapping: any;
+	@ApiProperty({
+		example: '{ "result": "double" }',
+		description: 'The functions for the output mapping',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	output_mapping: any;
 
-    @ApiProperty({
-        description: 'The annotations for the function',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    annotations: FunctionAnnotationDto;
+	@ApiProperty({
+		description: 'The annotations for the function',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	annotations: FunctionAnnotationDto;
 
 }

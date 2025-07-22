@@ -4,33 +4,33 @@ import { Type } from 'class-transformer';
 
 export type FunctionDocument = Function & Document;
 
-@Schema({ timestamps: true }) 
+@Schema({ timestamps: true })
 export class Function {
-  @Prop()
-  function_type: string;
+	@Prop()
+	function_type: string;
 
-  @Prop()
-  id: string;
+	@Prop()
+	id: string;
 
-  @Prop()
-  version: string;
+	@Prop()
+	version: string;
 
-  @Prop()
-  owner: string;
+	@Prop()
+	owner: string;
 
-  @Prop()
-  code_file_id: string;
+	@Prop()
+	code_file_id: string;
 
-  @Prop()
-  outputs: string[];
+	@Prop()
+	outputs: string[];
 
-  @Type(() => Date)
-  @Prop()
-  createdAt: Date;
+	@Type(() => Date)
+	@Prop()
+	createdAt: Date;
 
-  @Type(() => Date)
-  @Prop()
-  updatedAt: Date;
+	@Type(() => Date)
+	@Prop()
+	updatedAt: Date;
 }
 
 export const FunctionSchema = SchemaFactory.createForClass(Function);

@@ -5,13 +5,13 @@ import { UpdateWorkflowDto } from "./update-workflow.dto";
 
 export class CreateWorkflowDto extends UpdateWorkflowDto {
 
-    @ApiProperty({
-        example: 'test-workflow',
-        description: 'The workflow name',
-        required: true
-    })
-    @IsDefined()
-    @IsNotEmpty()
-    name: string;
+	@ApiProperty({
+		example: 'test-workflow',
+		description: 'The workflow name',
+		required: true
+	})
+	@IsDefined()
+	@IsNotEmpty()
+	name: string;
 
 }

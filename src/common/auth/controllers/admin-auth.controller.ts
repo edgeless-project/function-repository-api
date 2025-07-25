@@ -82,13 +82,14 @@ export class AdminAuthController {
 	})
 	@ApiQuery({
 		name: 'name',
-		required: false,
+		required: true,
 		type: String,
 	})
 	@ApiOkResponse({ type: ResponseCreateApikeyDto })
-	async CreateApiKey(@Req() req: jwtPayloadRequest, @Body('name') name?: string) {
+	async CreateApiKey(@Req() req: jwtPayloadRequest, @Body('name') name: string) {
 		const owner = req.user?.id
-		if (!owner) {throw new HttpException("Invalid credentials", HttpStatus.UNAUTHORIZED); }
+		if (!owner) throw new HttpException("Invalid credentials", HttpStatus.UNAUTHORIZED);
+		if (!name) throw new HttpException("Bad request format", HttpStatus.BAD_REQUEST)
 		return this.apikeyService.createKey(32, owner, name);
 	}
 

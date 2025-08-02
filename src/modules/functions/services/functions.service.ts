@@ -10,15 +10,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, mongo, PipelineStage, Types} from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
-import { FunctionClassSpecificationDto } from '../model/dto/function/class-specification.dto';
-import { Function, FunctionDocument } from '../schemas/function.schema';
-import { FunctionCode } from '../schemas/function-code.schema';
-import { ResponseFunctionDto } from '../model/dto/function/response-function.dto';
-import { ResponseUploadFunctionCodeDto } from '../model/dto/function/response-upload-function-code.dto';
-import { ResponseDeleteFunctionDto } from '../model/dto/function/response-delete-function.dto';
-import { UpdateFunctionDto } from '../model/dto/function/update-function.dto';
-import { ResponseFunctionVersionsDto } from '../model/dto/function/response-function-versions.dt';
-import { ResponseFunctionListDto } from '../model/dto/function/response-function-list.dto';
+import { FunctionClassSpecificationDto } from '@modules/functions/model/dto/function/class-specification.dto';
+import { Function, FunctionDocument } from '@modules/functions/schemas/function.schema';
+import { FunctionCode } from '@modules/functions/schemas/function-code.schema';
+import { ResponseFunctionDto } from '@modules/functions/model/dto/function/response-function.dto';
+import { ResponseUploadFunctionCodeDto } from '@modules/functions/model/dto/function/response-upload-function-code.dto';
+import { ResponseDeleteFunctionDto } from '@modules/functions/model/dto/function/response-delete-function.dto';
+import { UpdateFunctionDto } from '@modules/functions/model/dto/function/update-function.dto';
+import { ResponseFunctionVersionsDto } from '@modules/functions/model/dto/function/response-function-versions.dt';
+import { ResponseFunctionListDto } from '@modules/functions/model/dto/function/response-function-list.dto';
 import { FunctionType } from "@modules/functions/model/contract/function/class-specification.interface";
 import {ConfigService} from "@common/config/config.service";
 import moment from "moment";
@@ -34,7 +34,7 @@ export class FunctionService {
 
 	constructor(
 		@InjectModel(Function.name) private readonly functionModel: Model<FunctionDocument>,
-		private readonly config: ConfigService
+		private readonly config : ConfigService
 	) {
 		this.documentBatchSize = +config.get("DOCUMENT_FUNCTION_BATCH_SIZE");
 	}

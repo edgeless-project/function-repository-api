@@ -20,6 +20,7 @@ import { OptionalParseIntPipe } from '@common/pipes/optional-parse-int.pipe';
 import { ResponseFunctionListDto } from '@modules/functions/model/dto/function/response-function-list.dto';
 import {IS_API_KEY, Roles} from "@common/decorators/roles.decorator";
 import {UserRole} from "@modules/users/model/contract/user.interface";
+import {ResponseFunctionDto} from "@modules/functions/model/dto/function/response-function.dto";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
@@ -35,7 +36,7 @@ export class AdminFunctionController {
 		summary: '',
 		description: 'This service creates a new function. To upload the code file you need to use the <i>/upload</i> service first, and copy the provided id.'
 	})
-	@ApiOkResponse({ type: FunctionClassSpecificationDto})
+	@ApiOkResponse({ type: ResponseFunctionDto})
 	@ApiConsumes('application/json', 'application/x-www-form-urlencoded')
 	async createFunction(@Body() eventData: FunctionClassSpecificationDto) {
 		return this.functionService.createFunction(eventData, 'admin');
@@ -52,7 +53,7 @@ export class AdminFunctionController {
 		required: true,
 		type: String,
 	})
-	@ApiOkResponse({ type: FunctionClassSpecificationDto})
+	@ApiOkResponse({ type: ResponseFunctionDto})
 	@ApiConsumes('application/json', 'application/x-www-form-urlencoded')
 	async updateFunction(
 		@Body() eventData: UpdateFunctionDto,

@@ -45,7 +45,7 @@ export class UsersService {
 		try {
 			const resp = await this.userModel.exists({
 				email: userData.email
-			});
+			}).exec();
 			if (resp) throw new Error('User already exists');
 		} catch (e) {
 			const msg = `Could not create the name: ${userData.email}. ${e}`
@@ -147,10 +147,9 @@ export class UsersService {
 				throw new Error('Incorrect password.');
 			}
 		} catch (e){
-			const msg = `User not found with email: ${email}`;
+			const msg = `User not found with email: ${email} and provided password. ${e}`;
 			this.logger.error('getByEmailAndPass: ' + msg);
 			throw new HttpException(msg, HttpStatus.NOT_FOUND);
-
 		}
 		return user;
 	}

@@ -48,7 +48,7 @@ export class AdminWorkflowsController {
 		description: 'This service deletes an existing workflow by its name.'
 	})
 	@ApiOkResponse({ type: ResponseDeleteWorkflowDto})
-	async deleteFunction(@Param('name') name: string) {
+	async deleteWorkflow(@Param('name') name: string) {
 		return this.workflowsService.deleteWorkflow(name, 'admin');
 	}
 

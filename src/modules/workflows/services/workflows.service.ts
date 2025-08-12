@@ -95,7 +95,7 @@ export class WorkflowsService {
 
 	}
 
-	async updateWorkflow(name: string, workflowData: UpdateWorkflowDto, owner: string) {
+	async updateWorkflow(name: string, workflowData: UpdateWorkflowDto, owner: string)  {
 
 		const { functions, resources, annotations } = workflowData;
 
@@ -191,7 +191,7 @@ export class WorkflowsService {
 
 	async getWorkflow(name: string, excludeClassSpecification: boolean, owner: string): Promise<ResponseWorkflowDto> {
 		try {
-			const workflowData = await this.workflowModel.findOne({ name, owner });
+			const workflowData = await this.workflowModel.findOne({ name, owner }).exec();
 
 			if (!workflowData) {
 				throw new Error(`A workflow with the name: ${name} and owner:${owner} doesn't exist.`);

@@ -10,6 +10,7 @@ describe('WorkflowsService', () => {
 	let service: WorkflowsService;
 	let workflowModel: jest.Mocked<Model<WorkflowDocument>>;
 	let functionModel: jest.Mocked<Model<FunctionDocument>>;
+
 	const sampleWorkflows: Workflow[] = [
 		{
 			name: 'workflow1',
@@ -35,7 +36,6 @@ describe('WorkflowsService', () => {
 			updatedAt: new Date(),
 		},
 	];
-
 	const mockWorkflowModel = {
 		exists: jest.fn((dto)=>{
 			const exists = sampleWorkflows.find(workflow => workflow.name === dto.name && workflow.owner === dto.owner);
@@ -109,7 +109,6 @@ describe('WorkflowsService', () => {
 			})
 		})),
 	};
-
 	const mockFunctionModel = {
 		findOne: jest.fn((dto) => ({
 			exec: jest.fn(()=>{
@@ -185,7 +184,6 @@ describe('WorkflowsService', () => {
 			);
 		});
 	});
-
 	describe('UpdateWorkflow', () => {
 		it('should update a workflow', async () => {
 
@@ -236,7 +234,6 @@ describe('WorkflowsService', () => {
 			expect(result).toEqual(expectedResult);
 		});
 	});
-
 	describe('DeleteWorkflow', () => {
 		it('should delete a workflow', async () => {
 			const workflowName = sampleWorkflows[0].name;
@@ -246,7 +243,6 @@ describe('WorkflowsService', () => {
 			expect(result).toEqual({ deletedCount: 1 });
 		});
 	});
-
 	describe('GetWorkflow', () => {
 		it('should get a workflow from its name excluding class specification data', async () => {
 			const workflowName = sampleWorkflows[0].name;

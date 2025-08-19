@@ -114,9 +114,7 @@ describe('AdminFunctionController', () => {
 			expect(result).toEqual(expectedResult);
 		});
 	});
-
 	describe('updateFunction', () => {
-
 		it('should call service.updateFunction and return its result updating function_types and outputs', async () => {
 			const mockDto: UpdateFunctionDto = {
 				function_types: [{ type: 'typeA', code_file_id: 'file123' }],
@@ -140,7 +138,6 @@ describe('AdminFunctionController', () => {
 			expect(result).toEqual(expectedResult);
 		});
 	});
-
 	describe('deleteFunction', () => {
 		it('should call service.deleteFunction and return its result', async () => {
 			const id = 'func123';
@@ -154,7 +151,6 @@ describe('AdminFunctionController', () => {
 			expect(result).toEqual(expectedResult);
 		});
 	});
-
 	describe('getFunction', () => {
 		it('should call service.getFunction and return its result with specific version and type', async () => {
 			const id = 'func123';
@@ -190,7 +186,6 @@ describe('AdminFunctionController', () => {
 			expect(result).toEqual(expectedResult);
 		});
 	});
-
 	describe('uploadFunctionCode', () => {
 		it('should call service.saveFunctionCode with uploaded file and return response', async () => {
 
@@ -206,7 +201,6 @@ describe('AdminFunctionController', () => {
 			await expect(controller.uploadFunctionCode(null)).rejects.toThrow();
 		});
 	});
-
 	describe('getFunctionCode', () => {
 		it('should retrieve file and send it with correct headers', async () => {
 			const id = 'file123';
@@ -228,7 +222,6 @@ describe('AdminFunctionController', () => {
 			expect(resMock.end).toHaveBeenCalled();
 		});
 	});
-
 	describe('getFunctionVersions', () => {
 		it('should call service.getFunctionVersions and return the versions array', async () => {
 			const id = 'func1';
@@ -239,7 +232,6 @@ describe('AdminFunctionController', () => {
 			expect(result).toEqual(mockVersions);
 		});
 	});
-
 	describe('findFunctions', () => {
 		const offset = 0;
 		const limit = 10;

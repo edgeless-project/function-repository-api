@@ -82,7 +82,6 @@ describe('AdminWorkflowsController', () => {
 		updateWorkflow: jest.fn((name,dto,owner) => {
 			const wf = sampleWorkflows.find(w => w.name === name && w.owner === owner);
 			if (wf){
-				console.log(wf)
 				wf.name = dto.name;
 				wf.functions = dto.functions;
 				wf.resources = dto.resources;

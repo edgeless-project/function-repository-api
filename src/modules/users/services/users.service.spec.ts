@@ -11,7 +11,7 @@ describe('UsersService', () => {
 	let service: UsersService;
 	let userModel: jest.Mocked<Model<UserDocument>>;
 
-	let users: User[] = [
+	const users: User[] = [
 		{
 			id: 'mock-1',
 			email: 'mock1@email.com',
@@ -29,7 +29,6 @@ describe('UsersService', () => {
 			updatedAt: new Date(),
 		}
 	];
-
 	const mockUsersModel = {
 		exists: jest.fn((dto)=> ({
 			exec: jest.fn(() => {

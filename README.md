@@ -70,9 +70,10 @@ docker run --name mongo-nest -p 27017:27017 -d mongo:4
 
 Task automation is based on [NPM scripts](https://docs.npmjs.com/misc/scripts).
 
-| Task        | Description                                        |
-|-------------|----------------------------------------------------|
-| `npm start` | Run development server on `http://localhost:3003/` |
+| Task        | Description                                                 |
+|-------------|-------------------------------------------------------------|
+| `npm start` | Run development server on `http://localhost:3003/`          |
+| `npm test`  | Run tests from services and their correspondent controllers |
 
 ----------
 
@@ -80,6 +81,7 @@ Task automation is based on [NPM scripts](https://docs.npmjs.com/misc/scripts).
 
 - `npm start` - Start application
 - `npm run build` - Build application
+- `npm test` - Starts jest test runner
 
 ## Deployment
 

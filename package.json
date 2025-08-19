@@ -24,7 +24,11 @@
     "package:prod": "npm run build && npm run prune:prod",
     "lint": "tslint -p tsconfig.json -c tslint.json",
     "start:mongo": "docker start mongo-nest",
-    "create:mongo": "docker run -p 0.0.0.0:27017:27017 --name mongo-nest -d mongo:4"
+    "create:mongo": "docker run -p 0.0.0.0:27017:27017 --name mongo-nest -d mongo:4",
+	  "test": "jest",
+	  "test:watch": "jest --watch",
+	  "test:coverage": "jest --coverage",
+	  "test:debug": "node --inspect-brk ./node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^10.2.7",

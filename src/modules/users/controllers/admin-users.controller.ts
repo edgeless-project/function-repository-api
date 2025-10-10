@@ -24,6 +24,7 @@ import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-user.dto";
 import {jwtPayloadRequest} from "@common/auth/model/interfaces/jwt-payload.interface";
+import {CreateUserDTO} from "@modules/users/model/dto/create-user.dto";
 
 @ApiBearerAuth()
 @ApiTags('Admin')
@@ -66,7 +67,7 @@ export class AdminUsersController {
 	})
 	@ApiConsumes('application/json', 'application/x-www-form-urlencoded')
 	@ApiOkResponse({type:ResponseUserDto})
-	async createUser(@Body() eventData: UserDTO) {
+	async createUser(@Body() eventData: CreateUserDTO) {
 		return this.usersService.createUser(eventData);
 	}
 

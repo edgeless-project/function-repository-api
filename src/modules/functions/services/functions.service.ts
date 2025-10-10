@@ -202,48 +202,47 @@ export class FunctionService {
 		for (const f of resp) {
 			const funToUpdate = functionData.function_types.find(value => value.type === f.function_type);
 
-			if(funToUpdate && funToUpdate.code_file_id === f.code_file_id){
-				update_types.push({type:f.function_type, code_file_id: f.code_file_id});
-			}else if (funToUpdate) {
+			if (funToUpdate) {
+				if(funToUpdate.code_file_id != f.code_file_id){
 
-				if (!funToUpdate.code_file_id) {
-					const msg = 'code_file_id not provided';
-					this.logger.error('updateFunction: ' + msg);
-					throw new NotAcceptableException(msg);
+					if (!funToUpdate.code_file_id) {
+						const msg = 'code_file_id not provided';
+						this.logger.error('updateFunction: ' + msg);
+						throw new NotAcceptableException(msg);
+					}
+					if (!funToUpdate.type) {
+						const msg = 'type not provided';
+						this.logger.error('updateFunction: ' + msg);
+						throw new NotAcceptableException(msg);
+					}
+
+					// Check if the code file exists with the temp parameter and update it
+					try {
+						await this.functionCodesMeta.findOneAndUpdate({
+								_id: Types.ObjectId.createFromHexString(funToUpdate.code_file_id),
+								"metadata.temp": true
+							},
+							{$set: {"metadata.temp": false}}
+						).then((resp) => {
+							if (resp.lastErrorObject.n == 0 || !resp.lastErrorObject.updatedExisting) {
+								throw new Error("No function code found");
+							}
+						});
+
+					} catch (err) {
+						const msg = `There isn't a new function code with the code_file_id ${funToUpdate.code_file_id}`;
+						this.logger.error("updateFunction: On Update Function." + msg, err);
+						throw new NotAcceptableException(msg);
+					}
+
+					// Delete old document from bucket
+					try {
+						await this.bucket.delete(Types.ObjectId.createFromHexString(f.code_file_id));//Throws exception if no document found
+					} catch (err) {
+						this.logger.error('updateFunction: Server error on Delete.', err);
+						throw new InternalServerErrorException('Server error');
+					}
 				}
-				if (!funToUpdate.type) {
-					const msg = 'type not provided';
-					this.logger.error('updateFunction: ' + msg);
-					throw new NotAcceptableException(msg);
-				}
-
-				// Check if the code file exists with the temp parameter and update it
-				try {
-					await this.functionCodesMeta.findOneAndUpdate({
-							_id: Types.ObjectId.createFromHexString(funToUpdate.code_file_id),
-							"metadata.temp": true
-						},
-						{$set: {"metadata.temp": false}}
-					).then((resp) => {
-						if (resp.lastErrorObject.n == 0 || !resp.lastErrorObject.updatedExisting) {
-							throw new Error("No function code found");
-						}
-					});
-
-				} catch (err) {
-					const msg = `There isn't a new function code with the code_file_id ${funToUpdate.code_file_id}`;
-					this.logger.error("updateFunction: On Update Function." + msg, err);
-					throw new NotAcceptableException(msg);
-				}
-
-				// Delete old document from bucket
-				try {
-					await this.bucket.delete(Types.ObjectId.createFromHexString(f.code_file_id));//Throws exception if no document found
-				} catch (err) {
-					this.logger.error('updateFunction: Server error on Delete.', err);
-					throw new InternalServerErrorException('Server error');
-				}
-
 				// Update the function class
 				try {
 					const {
@@ -277,8 +276,7 @@ export class FunctionService {
 					this.logger.error('updateFunction: Server error on Update.', err);
 					throw new InternalServerErrorException('Server error');
 				}
-
-			}else {
+			} else {
 				// Delete expired function types that are on db but not on update request
 				await this.deleteFunction(id, owner, version, f.function_type);
 			}

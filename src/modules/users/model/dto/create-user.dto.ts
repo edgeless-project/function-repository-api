@@ -2,17 +2,7 @@ import {ApiProperty} from "@nestjs/swagger";
 import {IsDefined, IsNotEmpty} from "class-validator";
 import {User, UserRole} from "@modules/users/model/contract/user.interface";
 
-
-export class CreateUserDTO implements User {
-	@ApiProperty({
-		example: '00000001',
-		description: 'The User id',
-		type: String,
-		required: false
-	})
-	@IsDefined()
-	id: string = "00000001";
-
+export class CreateUserDTO implements Omit<User, 'id'> {
 	@ApiProperty({
 		example: 'email@email.com',
 		description: 'The User email',

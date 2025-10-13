@@ -12,6 +12,7 @@ import {ResponseDeleteUserDto} from "@modules/users/model/dto/response-delete-us
 import {ResponseResetPasswordDto} from "@modules/users/model/dto/response-reset-password.dto";
 import {UpdateUserDto} from "@modules/users/model/dto/update-user.dto";
 import {ChangePasswordDto} from "@modules/users/model/dto/change-password.dto";
+import {CreateUserDTO} from "@modules/users/model/dto/create-user.dto";
 
 @Injectable()
 export class UsersService {
@@ -39,7 +40,7 @@ export class UsersService {
 		return result;
 	}
 
-	async createUser(userData: UserDTO) {
+	async createUser(userData: CreateUserDTO) {
 
 		// Check if there exists already a user with that email
 		try {

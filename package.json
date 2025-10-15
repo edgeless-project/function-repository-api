@@ -27,7 +27,7 @@
     "create:mongo": "docker run -p 0.0.0.0:27017:27017 --name mongo-nest -d mongo:4",
 	  "test": "jest",
 	  "test:watch": "jest --watch",
-	  "test:coverage": "jest --coverage",
+	  "test:coverage": "jest --collectCoverage",
 	  "test:debug": "node --inspect-brk ./node_modules/.bin/jest --runInBand"
   },
   "dependencies": {
@@ -107,7 +107,14 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+	    "dist/common/auth/services/apikey.*.(t|j)s",
+	    "dist/modules/functions/services/**/*.(t|j)s",
+	    "dist/modules/users/services/**/*.(t|j)s",
+	    "dist/modules/workflows/services/**/*.(t|j)s",
+	    "dist/modules/users/controllers/**/*.(t|j)s",
+	    "src/common/auth/controllers/**/*.(t|j)s",
+	    "src/modules/functions/controllers/**/*.(t|j)s",
+	    "src/modules/workflows/controllers/**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

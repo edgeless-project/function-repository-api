@@ -28,15 +28,17 @@ import moment from "moment";
 export class FunctionService {
 	private logger = new Logger('FunctionService', { timestamp: true});
 	private readonly documentBatchSize: number = 1048576; //Default Size in Bytes
-	//GridFS Connexions
-	private functionCodesMeta = this.functionModel.db.collection('functioncodes.files');
-	private bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"functioncodes"});
+	// GridFS Connections
+	private functionCodesMeta: mongo.Collection;
+	private bucket: mongo.GridFSBucket;
 
 	constructor(
 		@InjectModel(Function.name) private readonly functionModel: Model<FunctionDocument>,
 		private readonly config : ConfigService
 	) {
 		this.documentBatchSize = +config.get("DOCUMENT_FUNCTION_BATCH_SIZE");
+		this.functionCodesMeta = this.functionModel.db.collection('functioncodes.files');
+		this.bucket = new mongo.GridFSBucket(this.functionModel.db.db,{bucketName:"functioncodes"});
 	}
 
 	//Cron function executed every 2 hours to delete obsolete code files

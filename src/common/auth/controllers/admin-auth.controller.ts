@@ -169,13 +169,4 @@ export class AdminAuthController {
 	async login(@Body() eventData: ValidateUserDto) {
 		return this.authService.signIn(eventData.email, eventData.password);
 	}
-
-	@Get('/logout/')
-	@ApiOperation({
-		summary: '',
-		description: 'This service ensures the user is correctly logged out.'
-	})
-	async logout() {
-		throw new HttpException("Not implemented",HttpStatus.NOT_IMPLEMENTED);
-	}
 }
